@@ -1,11 +1,12 @@
 <meta charset="utf-8">
-<title>ㄅㄆㄇ 小冒險</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ㄅㄆㄇ心愛小鎮</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Layout: one centered arcade cabinet — title bar, inventory HUD, 4:3 pixel stage, touch pad below. Single sky-blue look on purpose. */
+  /* Layout: one centered arcade cabinet — title bar, inventory HUD, 4:3 pixel stage (tap to walk). Single sky-blue look on purpose. */
   --sky:#5c94fc;
   --ink:#1b1b2f;
   --paper:#fffbe8;
@@ -25,7 +26,7 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
   background-image:
     linear-gradient(var(--sky),var(--sky));
 }
-.wrap{max-width:800px;margin:0 auto;padding-inline:16px;padding-block:14px 28px;display:flex;flex-direction:column;gap:12px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:12px 14px;display:flex;flex-direction:column;gap:12px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .logo{margin:0;font-weight:900;font-size:clamp(22px,4.4vw,34px);color:#fff;letter-spacing:.02em;
   text-shadow:3px 0 0 var(--ink),-3px 0 0 var(--ink),0 3px 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),6px 6px 0 rgba(0,0,0,.25)}
@@ -62,11 +63,19 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
 .slot.pop{animation:pop .5s steps(4)}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
 
-.stage{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border:4px solid var(--ink);background:#000;box-shadow:8px 8px 0 rgba(0,0,0,.25)}
+.stage{position:relative;width:100%;margin-inline:auto;aspect-ratio:4/3;max-width:100%;border:4px solid var(--ink);background:#000;box-shadow:8px 8px 0 rgba(0,0,0,.25)}
 #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+/* 電腦版寬畫面：地圖置中，兩側深色邊，對話框可以更寬 */
+.stage.wide{aspect-ratio:auto;background:repeating-linear-gradient(45deg,#23244a 0 12px,#1e1f40 12px 24px)}
+.stage.wide #game{position:absolute;top:0;left:50%;height:100%;transform:translateX(-50%)}
+.stage.wide .town{inset:0 auto 0 50%;transform:translateX(-50%)}
+.stage.wide .panel{max-width:min(1000px,100%)}
+.stage.wide .center-panel{max-width:min(900px,100%)}
 
 .ov{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:10px;overflow:auto}
-.ov.center{align-items:center;background:rgba(18,20,60,.55)}
+/* 關卡開頭牌、答對、過關：懸浮在整個畫面上，不受遊戲區高度限制 */
+.ov.center{position:fixed;inset:0;z-index:40;align-items:center;padding:16px;background:rgba(18,20,60,.55)}
+.ov.center .panel{max-height:calc(100% - 8px)}
 .panel{position:relative;width:100%;max-width:720px;max-height:100%;overflow:auto;background:var(--paper);border:4px solid var(--ink);
   box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 6px var(--gold),6px 6px 0 rgba(0,0,0,.35);padding:16px 18px}
 [hidden]{display:none!important}
@@ -172,6 +181,10 @@ body:not(.tts-on) .spk{display:none!important}
 .sign.tl{left:2%;top:3%}.sign.tr{right:2%;top:3%}.sign.bl{left:2%;bottom:3%}.sign.br{right:2%;bottom:3%}
 .tip{position:absolute;width:min(46%,340px);background:var(--paper);border:4px solid var(--ink);box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 6px var(--gold),6px 6px 0 rgba(0,0,0,.35);padding:10px 12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:16px}
 .tip.tl{left:2%;top:calc(3% + 54px)}.tip.tr{right:2%;top:calc(3% + 54px)}.tip.bl{left:2%;bottom:calc(3% + 54px)}.tip.br{right:2%;bottom:calc(3% + 54px)}
+.sign.tc{left:50%;top:3%;translate:-50% 0}
+.tip.tc{left:50%;top:calc(3% + 54px);translate:-50% 0}
+.prog{display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:20px}
+.sw{display:inline-block;width:14px;height:14px;border:2px solid var(--ink)}
 .tip-head{display:flex;align-items:center;gap:8px}
 .tip-head .st{margin-left:auto;color:var(--gold);font-size:16px;-webkit-text-stroke:1px var(--ink)}
 .tip-head .st .off{color:#e2dfcf}
@@ -184,11 +197,6 @@ body:not(.tts-on) .spk{display:none!important}
 .tip-go .hz{color:inherit}
 .hud-hint{font-weight:900;font-size:16px}
 @media (max-width:640px){.sign{font-size:12px;padding:2px 6px;gap:4px}.sign .em{font-size:16px}.sign .st{display:none}.tip{display:none!important}}
-.pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:4px;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none}
-.pad button{font-size:26px;background:var(--paper);border:4px solid var(--ink);box-shadow:0 4px 0 var(--ink);color:var(--ink);touch-action:none;cursor:pointer}
-.pad button:active,.pad button.on{transform:translateY(4px);box-shadow:none;background:var(--gold)}
-.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .r{grid-column:3;grid-row:2}.pad .d{grid-column:2;grid-row:3}
-@media (hover:none),(pointer:coarse){.pad{display:grid}}
 
 .help{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:3px solid var(--ink);padding:10px 14px;font-size:15px}
 .help .zy{font-weight:700;font-size:17px}
@@ -210,7 +218,7 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
 
 <div class="wrap">
   <header class="top">
-    <h1 class="logo"><span class="b">ㄅㄆㄇ</span> 小冒險</h1>
+    <h1 class="logo"><span class="b">ㄅㄆㄇ</span>心愛小鎮</h1>
     <div class="tools">
       <button class="chip" id="btnHan" aria-pressed="true" title="國字開關：關掉就只看注音">國字</button>
       <button class="chip" id="btnTts" aria-pressed="false" title="開啟後，題目旁會出現「🔊聽」按鈕，可以朗讀">👂 聽</button>
@@ -236,12 +244,6 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
     <div class="ov" id="ov" hidden></div>
   </div>
 
-  <div class="pad" id="pad" aria-label="方向鍵">
-    <button class="u" data-dir="u" aria-label="上">▲</button>
-    <button class="l" data-dir="l" aria-label="左">◀</button>
-    <button class="r" data-dir="r" aria-label="右">▶</button>
-    <button class="d" data-dir="d" aria-label="下">▼</button>
-  </div>
 
   <div class="modal" id="helpModal" hidden role="dialog" aria-modal="true" aria-label="遊戲說明">
     <div class="panel help-panel" id="helpBody"></div>
@@ -273,8 +275,7 @@ const LEVELS = [
   giver:{name:'ㄇㄚ ˙ㄇㄚ', han:'媽媽', sprite:'mom'},
   intro:[
     ['ㄐㄧㄣ ㄊㄧㄢ ㄕˋ ㄇㄟˋ ˙ㄇㄟ ˙ㄉㄜ ㄕㄥ ㄖˋ。','今天是妹妹的生日。'],
-    ['ㄇㄚ ˙ㄇㄚ ㄧㄠˋ ㄗㄨㄛˋ ㄉㄢˋ ㄍㄠ。','媽媽要做蛋糕。'],
-    ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄘㄞˊ ㄌㄧㄠˋ！','請你幫忙找材料！']],
+    ['ㄑㄧㄥˇ ㄅㄤ ㄇㄚ ˙ㄇㄚ ㄓㄠˇ ㄉㄢˋ ㄍㄠ ㄘㄞˊ ㄌㄧㄠˋ！','請幫媽媽找蛋糕材料！']],
   win:['ㄉㄢˋ ㄍㄠ ㄗㄨㄛˋ ㄏㄠˇ ˙ㄌㄜ！','蛋糕做好了！','🎂'],
   npcs:[
     {key:'a', name:'ㄇㄨˇ ㄐㄧ', han:'母雞', sprite:'hen',
@@ -303,7 +304,7 @@ const LEVELS = [
        opts:[['ㄋㄧㄡˊ ㄋㄞˇ'],['ㄌㄧㄡˊ ㄋㄞˇ'],['ㄋㄧㄡˊ ㄌㄞˇ'],['ㄋㄧㄠˇ ㄋㄞˇ']]},
       {say:['ㄖㄨˇ ㄋㄧㄡˊ ㄞˋ ㄔ ㄘㄠˇ。','乳牛愛吃草。'],
        q:['ㄖㄨˇ ㄋㄧㄡˊ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ？','乳牛愛吃什麼？'],
-       opts:[['ㄘㄠˇ','🌿','草'],['ㄩˊ','🐟','魚'],['ㄖㄡˋ','🍖','肉'],['ㄊㄤˊ','🍬','糖'],['ㄒㄧㄤ ㄐㄧㄠ','🍌','香蕉']]}]},
+       opts:[['ㄘㄠˇ','🌿','草'],['ㄩˊ','🐟','魚'],['ㄖㄡˋ','🍖','肉'],['ㄊㄤˊ','🍬','糖']]}]},
     {key:'d', name:'ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ', han:'小兔子', sprite:'bunny',
      item:{e:'🍓', z:'ㄘㄠˇ ㄇㄟˊ', h:'草莓'},
      hi:['ㄊㄧㄠˋ ㄊㄧㄠˋ ㄊㄧㄠˋ！ㄨㄛˇ ㄕˋ ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ。','跳跳跳！我是小兔子。'],
@@ -312,7 +313,7 @@ const LEVELS = [
        opts:[['ㄘㄠˇ ㄇㄟˊ'],['ㄔㄠˇ ㄇㄟˊ'],['ㄗㄠˇ ㄇㄟˊ'],['ㄘㄠˊ ㄇㄟˊ']]},
       {say:['ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ ˙ㄉㄜ ㄦˇ ˙ㄉㄨㄛ ㄏㄣˇ ㄔㄤˊ。','小兔子的耳朵很長。'],
        q:['ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ ㄕㄣˊ ˙ㄇㄜ ㄏㄣˇ ㄔㄤˊ？','小兔子什麼很長？'],
-       opts:[['ㄦˇ ˙ㄉㄨㄛ','👂','耳朵'],['ㄅㄧˊ ˙ㄗ','👃','鼻子'],['ㄧㄢˇ ˙ㄐㄧㄥ','👀','眼睛'],['ㄐㄧㄠˇ','🦶','腳'],['ㄗㄨㄟˇ ˙ㄅㄚ','👄','嘴巴']]}]}
+       opts:[['ㄦˇ ˙ㄉㄨㄛ','👂','耳朵'],['ㄅㄧˊ ˙ㄗ','👃','鼻子'],['ㄧㄢˇ ˙ㄐㄧㄥ','👀','眼睛'],['ㄐㄧㄠˇ','🦶','腳']]}]}
   ]
 },
 {
@@ -332,123 +333,108 @@ const LEVELS = [
     'TTTTTTTTTTTTTTTT'],
   giver:{name:'ㄍㄜ ˙ㄍㄜ', han:'哥哥', sprite:'bro'},
   intro:[
-    ['ㄨㄛˇ ˙ㄇㄣ ㄌㄞˊ ㄏㄞˇ ㄅㄧㄢ ㄨㄢˊ。','我們來海邊玩。'],
-    ['ㄍㄜ ˙ㄍㄜ ㄒㄧㄤˇ ㄉㄨㄟ ㄧ ㄗㄨㄛˋ ㄕㄚ ㄅㄠˇ。','哥哥想堆一座沙堡。'],
+    ['ㄍㄜ ˙ㄍㄜ ㄒㄧㄤˇ ㄉㄨㄟ ㄕㄚ ㄅㄠˇ。','哥哥想堆沙堡。'],
     ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄉㄨㄥ ˙ㄒㄧ！','請你幫忙找東西！']],
   win:['ㄕㄚ ㄅㄠˇ ㄉㄨㄟ ㄏㄠˇ ˙ㄌㄜ！','沙堡堆好了！','🏰'],
   npcs:[
     {key:'a', name:'ㄆㄤˊ ㄒㄧㄝˋ', han:'螃蟹', sprite:'crab',
      item:{e:'🐚', z:'ㄅㄟˋ ㄎㄜˊ', h:'貝殼'},
-     hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄕˋ ㄏㄨㄥˊ ㄙㄜˋ ˙ㄉㄜ ㄆㄤˊ ㄒㄧㄝˋ。','你好！我是紅色的螃蟹。'],
+     hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄕˋ ㄆㄤˊ ㄒㄧㄝˋ。','你好！我是螃蟹。'],
      qs:[
-      {q:['ㄆㄤˊ ㄒㄧㄝˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄧㄢˊ ㄙㄜˋ？','螃蟹是什麼顏色？'],
-       opts:[['ㄏㄨㄥˊ ㄙㄜˋ','🟥','紅色'],['ㄌㄢˊ ㄙㄜˋ','🟦','藍色'],['ㄌㄩˋ ㄙㄜˋ','🟩','綠色'],['ㄏㄨㄤˊ ㄙㄜˋ','🟨','黃色'],['ㄏㄟ ㄙㄜˋ','⬛','黑色']]},
+      {q:['ㄆㄤˊ ㄒㄧㄝˋ ㄗㄣˇ ˙ㄇㄜ ㄧˊ ㄉㄨㄥˋ？','螃蟹怎麼移動？'],
+       opts:[['ㄏㄥˊ ˙ㄓㄜ ㄗㄡˇ','↔️','橫著走'],['ㄓˊ ˙ㄓㄜ ㄗㄡˇ','↕️','直著走'],['ㄉㄠˋ ˙ㄓㄜ ㄗㄡˇ','🔙','倒著走'],['ㄩㄥˋ ㄈㄟ ˙ㄉㄜ','🕊️','用飛的']]},
       {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🐚', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
        opts:[['ㄅㄟˋ ㄎㄜˊ'],['ㄆㄟˋ ㄎㄜˊ'],['ㄅㄟˋ ㄍㄜˊ'],['ㄅㄞˋ ㄎㄜˊ']]}]},
     {key:'b', name:'ㄩˊ ㄈㄨ', han:'漁夫', sprite:'fisher',
      item:{e:'🪣', z:'ㄕㄨㄟˇ ㄊㄨㄥˇ', h:'水桶'},
      hi:['ㄏㄚ ㄏㄚ！ㄨㄛˇ ㄕˋ ㄩˊ ㄈㄨ。','哈哈！我是漁夫。'],
      qs:[
-      {say:['ㄨㄛˇ ㄉㄧㄠˋ ㄉㄠˋ ˙ㄌㄜ ㄧ ㄊㄧㄠˊ ㄉㄚˋ ㄩˊ！','我釣到了一條大魚！'],
-       q:['ㄩˊ ㄈㄨ ㄉㄧㄠˋ ㄉㄠˋ ˙ㄌㄜ ㄕㄣˊ ˙ㄇㄜ？','漁夫釣到了什麼？'],
-       opts:[['ㄉㄚˋ ㄩˊ','🐟','大魚'],['ㄒㄧㄝˊ ˙ㄗ','👟','鞋子'],['ㄒㄧㄚ ˙ㄗ','🦐','蝦子'],['ㄓㄤ ㄩˊ','🐙','章魚']]},
+      {q:['ㄨㄛˇ ㄉㄧㄠˋ ㄉㄠˋ ˙ㄌㄜ ㄕㄣˊ ˙ㄇㄜ？','我釣到了什麼？'], pic:'👢', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄩˇ ㄒㄧㄝˊ'],['ㄩˊ ㄒㄧㄝˊ'],['ㄧˇ ㄒㄧㄝˊ'],['ㄩˇ ㄐㄧㄝˊ']]},
       {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🪣', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
        opts:[['ㄕㄨㄟˇ ㄊㄨㄥˇ'],['ㄙㄨㄟˇ ㄊㄨㄥˇ'],['ㄕㄨㄟˇ ㄉㄨㄥˇ'],['ㄕㄨˇ ㄊㄨㄥˇ']]}]},
     {key:'c', name:'ㄏㄞˇ ㄍㄨㄟ', han:'海龜', sprite:'turtle',
      item:{e:'⭐', z:'ㄏㄞˇ ㄒㄧㄥ', h:'海星'},
      hi:['ㄋㄧˇ ㄏㄠˇ…ㄨㄛˇ ㄕˋ ㄏㄞˇ ㄍㄨㄟ。','你好…我是海龜。'],
      qs:[
-      {say:['ㄏㄞˇ ㄍㄨㄟ ㄆㄚˊ ˙ㄉㄜ ㄏㄣˇ ㄇㄢˋ。','海龜爬得很慢。'],
-       q:['ㄏㄞˇ ㄍㄨㄟ ㄆㄚˊ ˙ㄉㄜ ㄗㄣˇ ˙ㄇㄜ ㄧㄤˋ？','海龜爬得怎麼樣？'],
-       opts:[['ㄏㄣˇ ㄇㄢˋ','🐌','很慢'],['ㄏㄣˇ ㄎㄨㄞˋ','⚡','很快'],['ㄏㄣˇ ㄍㄠ','🦒','很高'],['ㄏㄣˇ ㄌㄟˋ','😪','很累']]},
+      {q:['ㄏㄞˇ ㄍㄨㄟ ㄧㄡˇ ㄐㄧˇ ㄓ ㄐㄧㄠˇ？','海龜有幾隻腳？'],
+       opts:[['ㄙˋ ㄓ','4️⃣','四隻'],['ㄌㄧㄤˇ ㄓ','2️⃣','兩隻'],['ㄌㄧㄡˋ ㄓ','6️⃣','六隻'],['ㄅㄚ ㄓ','8️⃣','八隻']]},
       {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'⭐', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
        opts:[['ㄏㄞˇ ㄒㄧㄥ'],['ㄏㄞˇ ㄒㄧㄣ'],['ㄏㄞˋ ㄒㄧㄥ'],['ㄏㄟ ㄒㄧㄥ']]}]},
     {key:'d', name:'ㄏㄞˇ ㄡ', han:'海鷗', sprite:'gull',
      item:{e:'🚩', z:'ㄒㄧㄠˇ ㄑㄧˊ ˙ㄗ', h:'小旗子'},
      hi:['ㄨㄛˇ ㄕˋ ㄏㄞˇ ㄡ，ㄨㄛˇ ㄏㄨㄟˋ ㄈㄟ！','我是海鷗，我會飛！'],
      qs:[
-      {say:['ㄨㄛˇ ㄗㄞˋ ㄊㄧㄢ ㄕㄤˋ ㄈㄟ。','我在天上飛。'],
-       q:['ㄏㄞˇ ㄡ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ ㄈㄟ？','海鷗在哪裡飛？'],
+      {q:['ㄏㄞˇ ㄡ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ ㄈㄟ？','海鷗在哪裡飛？'],
        opts:[['ㄊㄧㄢ ㄕㄤˋ','☁️','天上'],['ㄕㄨㄟˇ ㄌㄧˇ','🌊','水裡'],['ㄕㄨˋ ㄒㄧㄚˋ','🌳','樹下'],['ㄐㄧㄚ ㄌㄧˇ','🏠','家裡']]},
-      {say:['ㄏㄞˇ ㄅㄧㄢ ㄧㄡˇ ㄨˇ ㄓ ㄏㄞˇ ㄡ。','海邊有五隻海鷗。'],
-       q:['ㄏㄞˇ ㄅㄧㄢ ㄧㄡˇ ㄐㄧˇ ㄓ ㄏㄞˇ ㄡ？','海邊有幾隻海鷗？'],
-       opts:[['ㄨˇ ㄓ','5️⃣','五隻'],['ㄙㄢ ㄓ','3️⃣','三隻'],['ㄙˋ ㄓ','4️⃣','四隻'],['ㄌㄧㄡˋ ㄓ','6️⃣','六隻']]}]}
+      {q:['ㄏㄞˇ ㄡ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄧㄢˊ ㄙㄜˋ？','海鷗是什麼顏色？'],
+       opts:[['ㄅㄞˊ ㄙㄜˋ','⬜','白色'],['ㄏㄨㄥˊ ㄙㄜˋ','🟥','紅色'],['ㄌㄩˋ ㄙㄜˋ','🟩','綠色'],['ㄌㄢˊ ㄙㄜˋ','🟦','藍色']]}]}
   ]
 },
 {
-  name:'ㄙㄣ ㄌㄧㄣˊ', han:'森林', emoji:'🌲', theme:'forest',
+  // 森林關：點動物，牠用注音說想吃什麼；帶牠去找散在地圖上的食物
+  type:'feed', name:'ㄙㄣ ㄌㄧㄣˊ', han:'森林', emoji:'🌲', theme:'forest',
+  // 動物和食物的位置、每隻想吃什麼，每次進來都隨機重排（見 setupFeed）
   map:[
     '################',
-    '#P..#.....#..a.#',
-    '#...#..*..#....#',
-    '#.===..#..===..#',
-    '#.=.#..#....=.##',
+    '#P....#........#',
+    '#...#.#.###....#',
+    '#...#...#......#',
+    '#...###.#.##.###',
     '~~B~~~~~~~~~B~~~',
-    '#.=....b......##',
-    '#.====...##.c..#',
-    '#....=...#.....#',
-    '#.d..=..*#...R.#',
-    '#....=.........#',
+    '#.........#....#',
+    '#.##.###..#....#',
+    '#..#...#..#....#',
+    '#..#...#..##...#',
+    '#....#.........#',
     '################'],
   giver:{name:'ㄅㄚˋ ˙ㄅㄚ', han:'爸爸', sprite:'dad'},
   intro:[
-    ['ㄊㄧㄢ ㄎㄨㄞˋ ㄏㄟ ˙ㄌㄜ。','天快黑了。'],
-    ['ㄨㄛˇ ˙ㄇㄣ ㄧㄠˋ ㄗㄞˋ ㄙㄣ ㄌㄧㄣˊ ㄌㄨˋ ㄧㄥˊ。','我們要在森林露營。'],
-    ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄉㄨㄥ ˙ㄒㄧ！','請你幫忙找東西！']],
-  win:['ㄨㄛˇ ˙ㄇㄣ ㄎㄞ ㄕˇ ㄌㄨˋ ㄧㄥˊ ˙ㄌㄜ！','我們開始露營了！','🏕️'],
+    ['ㄙㄣ ㄌㄧㄣˊ ㄌㄧˇ ˙ㄉㄜ ㄉㄨㄥˋ ㄨˋ ㄜˋ ˙ㄌㄜ。','森林裡的動物餓了。'],
+    ['ㄑㄧㄥˇ ㄅㄤ ㄊㄚ ˙ㄇㄣ ㄓㄠˇ ㄒㄧˇ ㄏㄨㄢ ㄔ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ！','請幫他們找喜歡吃的東西！']],
+  win:['ㄉㄨㄥˋ ㄨˋ ˙ㄇㄣ ㄉㄡ ㄔ ㄅㄠˇ ˙ㄌㄜ！','動物們都吃飽了！','🐾'],
+  // 食物庫：每次放 8 種在地圖上（5 種動物要的 + 3 種干擾）
+  foods:{
+    carrot:  {e:'🥕', z:'ㄏㄨˊ ㄌㄨㄛˊ ˙ㄅㄛ', h:'胡蘿蔔'},
+    veg:     {e:'🥬', z:'ㄑㄧㄥ ㄘㄞˋ', h:'青菜'},
+    berry:   {e:'🍓', z:'ㄘㄠˇ ㄇㄟˊ', h:'草莓'},
+    honey:   {e:'🍯', z:'ㄈㄥ ㄇㄧˋ', h:'蜂蜜'},
+    fish:    {e:'🐟', z:'ㄩˊ', h:'魚'},
+    apple:   {e:'🍎', z:'ㄆㄧㄥˊ ㄍㄨㄛˇ', h:'蘋果'},
+    chestnut:{e:'🌰', z:'ㄌㄧˋ ˙ㄗ', h:'栗子'},
+    peanut:  {e:'🥜', z:'ㄏㄨㄚ ㄕㄥ', h:'花生'},
+    corn:    {e:'🌽', z:'ㄩˋ ㄇㄧˇ', h:'玉米'},
+    banana:  {e:'🍌', z:'ㄒㄧㄤ ㄐㄧㄠ', h:'香蕉'},
+    bug:     {e:'🐛', z:'ㄔㄨㄥˊ ˙ㄗ', h:'蟲子'}},
   npcs:[
-    {key:'a', name:'ㄇㄠ ㄊㄡˊ ㄧㄥ', han:'貓頭鷹', sprite:'owl',
-     item:{e:'🔦', z:'ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ', h:'手電筒'},
-     hi:['ㄍㄨ ㄍㄨ！ㄨㄛˇ ㄕˋ ㄇㄠ ㄊㄡˊ ㄧㄥ。','咕咕！我是貓頭鷹。'],
-     qs:[
-      {say:['ㄨㄛˇ ㄅㄞˊ ㄊㄧㄢ ㄕㄨㄟˋ ㄐㄧㄠˋ，ㄨㄢˇ ㄕㄤˋ ㄔㄨ ㄌㄞˊ ㄨㄢˊ。','我白天睡覺，晚上出來玩。'],
-       q:['ㄇㄠ ㄊㄡˊ ㄧㄥ ㄕㄣˊ ˙ㄇㄜ ㄕˊ ˙ㄏㄡ ㄔㄨ ㄌㄞˊ ㄨㄢˊ？','貓頭鷹什麼時候出來玩？'],
-       opts:[['ㄨㄢˇ ㄕㄤˋ','🌙','晚上'],['ㄅㄞˊ ㄊㄧㄢ','☀️','白天'],['ㄗㄠˇ ㄕㄤˋ','🌅','早上'],['ㄓㄨㄥ ㄨˇ','🍱','中午']]},
-      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🔦', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
-       opts:[['ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ'],['ㄙㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ'],['ㄕㄡˇ ㄊㄧㄢˋ ㄊㄨㄥˇ'],['ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˊ']]}]},
-    {key:'b', name:'ㄉㄚˋ ㄒㄩㄥˊ', han:'大熊', sprite:'bear',
-     item:{e:'🪵', z:'ㄇㄨˋ ㄔㄞˊ', h:'木柴'},
-     hi:['ㄏㄡˇ！ㄨㄛˇ ㄕˋ ㄉㄚˋ ㄒㄩㄥˊ。','吼！我是大熊。'],
-     qs:[
-      {say:['ㄨㄛˇ ㄗㄨㄟˋ ㄞˋ ㄔ ㄈㄥ ㄇㄧˋ。','我最愛吃蜂蜜。'],
-       q:['ㄉㄚˋ ㄒㄩㄥˊ ㄗㄨㄟˋ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ？','大熊最愛吃什麼？'],
-       opts:[['ㄈㄥ ㄇㄧˋ','🍯','蜂蜜'],['ㄏㄨˊ ㄌㄨㄛˊ ˙ㄅㄛ','🥕','胡蘿蔔'],['ㄒㄧ ㄍㄨㄚ','🍉','西瓜'],['ㄇㄧㄢˋ ㄅㄠ','🍞','麵包'],['ㄅㄧㄥ ㄑㄧˊ ㄌㄧㄣˊ','🍦','冰淇淋']]},
-      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🪵', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
-       opts:[['ㄇㄨˋ ㄔㄞˊ'],['ㄇㄨˋ ㄘㄞˊ'],['ㄇㄨˇ ㄔㄞˊ'],['ㄋㄨˋ ㄔㄞˊ']]}]},
-    {key:'c', name:'ㄙㄨㄥ ㄕㄨˇ', han:'松鼠', sprite:'squirrel',
-     item:{e:'🗺️', z:'ㄉㄧˋ ㄊㄨˊ', h:'地圖'},
-     hi:['ㄏㄟ！ㄨㄛˇ ㄕˋ ㄒㄧㄠˇ ㄙㄨㄥ ㄕㄨˇ。','嘿！我是小松鼠。'],
-     qs:[
-      {say:['ㄨㄛˇ ㄗㄞˋ ㄕㄨˋ ㄕㄤˋ ㄔ ㄌㄧˋ ˙ㄗ。','我在樹上吃栗子。'],
-       q:['ㄙㄨㄥ ㄕㄨˇ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ？','松鼠在哪裡？'],
-       opts:[['ㄕㄨˋ ㄕㄤˋ','🌳','樹上'],['ㄏㄜˊ ㄌㄧˇ','🌊','河裡'],['ㄨ ㄉㄧㄥˇ','🏠','屋頂'],['ㄉㄨㄥˋ ㄌㄧˇ','🕳️','洞裡']]},
-      {say:['ㄙㄨㄥ ㄕㄨˇ ˙ㄉㄜ ㄨㄟˇ ˙ㄅㄚ ㄉㄚˋ ㄉㄚˋ ˙ㄉㄜ。','松鼠的尾巴大大的。'],
-       q:['ㄙㄨㄥ ㄕㄨˇ ㄕㄣˊ ˙ㄇㄜ ㄉㄚˋ ㄉㄚˋ ˙ㄉㄜ？','松鼠什麼大大的？'],
-       opts:[['ㄨㄟˇ ˙ㄅㄚ','🐿️','尾巴'],['ㄦˇ ˙ㄉㄨㄛ','👂','耳朵'],['ㄐㄧㄠˇ','🦶','腳'],['ㄧㄢˇ ˙ㄐㄧㄥ','👀','眼睛']]}]},
-    {key:'d', name:'ㄧㄝˊ ˙ㄧㄝ', han:'爺爺', sprite:'grandpa',
-     item:{e:'⛺', z:'ㄓㄤˋ ㄆㄥˊ', h:'帳篷'},
-     hi:['ㄏㄚ ㄏㄚ，ㄒㄧㄠˇ ㄆㄥˊ ˙ㄧㄡ ㄋㄧˇ ㄏㄠˇ！','哈哈，小朋友你好！'],
-     qs:[
-      {say:['ㄊㄧㄢ ㄏㄟ ˙ㄌㄜ，ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄏㄣˇ ㄉㄨㄛ ㄒㄧㄥ ˙ㄒㄧㄥ。','天黑了，天上有很多星星。'],
-       q:['ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄕㄣˊ ˙ㄇㄜ？','天上有什麼？'],
-       opts:[['ㄒㄧㄥ ˙ㄒㄧㄥ','✨','星星'],['ㄘㄞˇ ㄏㄨㄥˊ','🌈','彩虹'],['ㄊㄞˋ ㄧㄤˊ','☀️','太陽'],['ㄏㄨˊ ㄉㄧㄝˊ','🦋','蝴蝶']]},
-      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'⛺', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
-       opts:[['ㄓㄤˋ ㄆㄥˊ'],['ㄗㄤˋ ㄆㄥˊ'],['ㄓㄤˋ ㄅㄥˊ'],['ㄓㄢˋ ㄆㄥˊ']]}]}
-  ]
+    {key:'a', name:'ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ', han:'小兔子', sprite:'bunny',    e:'🐰', likes:['carrot','veg','berry']},
+    {key:'b', name:'ㄉㄚˋ ㄒㄩㄥˊ',     han:'大熊',   sprite:'bear',     e:'🐻', likes:['honey','fish','apple']},
+    {key:'c', name:'ㄙㄨㄥ ㄕㄨˇ',      han:'松鼠',   sprite:'squirrel', e:'🐿️', likes:['chestnut','peanut','corn']},
+    {key:'d', name:'ㄨ ㄍㄨㄟ',         han:'烏龜',   sprite:'turtle',   e:'🐢', likes:['veg','berry','banana']},
+    {key:'e', name:'ㄇㄠ ㄊㄡˊ ㄧㄥ',   han:'貓頭鷹', sprite:'owl',      e:'🦉', likes:['bug','fish']}]
 },
 {
   // 超商關：玩家是店員，客人問商品在哪裡，在畫面上點出來
-  type:'shop', name:'ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ', han:'便利商店', emoji:'🏪', theme:'farm', need:10,
+  type:'shop', name:'ㄔㄠ ㄕㄤ', han:'超商', emoji:'🏪', theme:'farm', need:10,
   giver:{name:'ㄉㄧㄢˋ ㄓㄤˇ', han:'店長', sprite:'clerk'},
   intro:[
-    ['ㄐㄧㄣ ㄊㄧㄢ ㄋㄧˇ ㄕˋ ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ ˙ㄉㄜ ㄉㄧㄢˋ ㄩㄢˊ。','今天你是便利商店的店員。'],
-    ['ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄨㄣˋ ㄋㄧˇ ㄉㄨㄥ ˙ㄒㄧ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ。','客人會問你東西在哪裡。'],
-    ['ㄑㄧㄥˇ ㄉㄧㄢˇ ㄔㄨ ㄉㄨㄟˋ ˙ㄉㄜ ㄕㄤ ㄆㄧㄣˇ，ㄉㄚˊ ㄉㄨㄟˋ ㄕˊ ㄊㄧˊ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ！','請點出對的商品，答對十題就過關！']],
+    ['ㄐㄧㄣ ㄊㄧㄢ ㄋㄧˇ ㄕˋ ㄉㄧㄢˋ ㄩㄢˊ。','今天你是店員。'],
+    ['ㄉㄧㄢˇ ㄔㄨ ㄎㄜˋ ㄖㄣˊ ㄧㄠˋ ˙ㄉㄜ ㄕㄤ ㄆㄧㄣˇ！','點出客人要的商品！']],
   win:['ㄋㄧˇ ㄕˋ ㄗㄨㄟˋ ㄅㄤˋ ˙ㄉㄜ ㄉㄧㄢˋ ㄩㄢˊ！','你是最棒的店員！','🏪'],
   npcs:[]
+},
+{
+  // 魚店關：玩家是老闆，客人說要幾隻什麼顏色的魚、螃蟹、蝦子，用魚網抓
+  type:'fish', name:'ㄩˊ ㄉㄧㄢˋ', han:'魚店', emoji:'🐟', theme:'beach', need:6,
+  giver:{name:'ㄩˊ ㄈㄨ', han:'漁夫', sprite:'fisher'},
+  intro:[
+    ['ㄐㄧㄣ ㄊㄧㄢ ㄋㄧˇ ㄕˋ ㄇㄞˋ ㄩˊ ˙ㄉㄜ ㄌㄠˇ ㄅㄢˇ。','今天你是賣魚的老闆。'],
+    ['ㄩㄥˋ ㄩˊ ㄨㄤˇ ㄓㄨㄚ ㄎㄜˋ ㄖㄣˊ ㄧㄠˋ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ！','用魚網抓客人要的東西！']],
+  win:['ㄋㄧˇ ㄕˋ ㄗㄨㄟˋ ㄅㄤˋ ˙ㄉㄜ ㄌㄠˇ ㄅㄢˇ！','你是最棒的老闆！','🐟'],
+  npcs:[]
 }];
-const LV_NO = ['ㄉㄧˋ ㄧ ㄍㄨㄢ','ㄉㄧˋ ㄦˋ ㄍㄨㄢ','ㄉㄧˋ ㄙㄢ ㄍㄨㄢ','ㄉㄧˋ ㄙˋ ㄍㄨㄢ'];
-const LV_NO_H = ['第一關','第二關','第三關','第四關'];
+const LV_NO = ['ㄉㄧˋ ㄧ ㄍㄨㄢ','ㄉㄧˋ ㄦˋ ㄍㄨㄢ','ㄉㄧˋ ㄙㄢ ㄍㄨㄢ','ㄉㄧˋ ㄙˋ ㄍㄨㄢ','ㄉㄧˋ ㄨˇ ㄍㄨㄢ'];
+const LV_NO_H = ['第一關','第二關','第三關','第四關','第五關'];
 
 // 超商貨架：三層，每層七樣 [圖, 注音, 國字]
 const SHOP_ITEMS = [
@@ -497,6 +483,17 @@ function rowsFor(def, frame, back){
     if (def.v === 'horn'){ r[0]='2.1y10.1y2.'; }
     if (def.v === 'none'){ r[1]='16.'; r[2]='16.'; }
     if (frame){ r[14]='3.3f4.3f3.'; r[15]='3.3d4.3d3.'; }
+  } else if (def.t === 'crab'){
+    // 螃蟹：兩支高舉的大鉗子、立起來的眼睛、扁扁的身體、兩側的腳
+    r = ['16.','1.2r10.2r1.','2r1.1r8.1r1.2r','3r10.3r','1.2r10.2r1.','2.1r2.1w4.1w2.1r2.','2.1r2.1k4.1k2.1r2.',
+         '2.12r2.','1.14r1.','1.2r1l8r1l2r1.','1.5r4m5r1.','2.12r2.','3.10d3.','1d1.1d1.1d6.1d1.1d1.1d','1d2.1d8.1d2.1d','16.'];
+    if (frame){ r[13]='1.1d1.1d1.1d4.1d1.1d1.1d1.'; r[14]='2.1d1.1d6.1d1.1d2.'; }
+  } else if (def.t === 'cow'){
+    // 乳牛：牛角、往兩旁伸的耳朵、粉紅大鼻子、黑斑、乳房
+    r = ['3.1y8.1y3.','3.2y6.2y3.','4.3x5f4.','1.3i3x5f3i1.','2.2i1x1k4f1k1f2i2.','4.2x6f4.',
+         '3.10l3.','3.2l2k2l2k2l3.','3.10l3.','2.12f2.','1.3f2x6f2x1f1.','1.2f2x8f2x1.',
+         '1.14f1.','2.5f2i5f2.','2.2f8.2f2.','2.2d8.2d2.'];
+    if (frame){ r[14]='3.2f6.2f3.'; r[15]='3.2d6.2d3.'; }
   } else {
     r = BIRD.slice();
     if (def.v === 'tuft'){ r[1]='4.2r4.2r4.'; r[2]='4.3r2.3r4.'; }
@@ -534,10 +531,10 @@ const DEFS = {
   bro:     {t:'person', v:'hair',  pal:{...SK, h:INK, o:'#30b0e0', b:'#3c5c9c'}},
   dad:     {t:'person', v:'cap',   pal:{...SK, c:'#3c8c3c', h:'#2c1c10', o:'#6c8c3c', b:'#5c4c3c'}},
   hen:     {t:'bird',   v:'comb',  pal:{f:'#ffffff', r:'#e83030', y:'#fcb030', k:INK, w:'#d0d0dc'}},
-  cow:     {t:'critter',v:'horn',  pal:{f:'#ffffff', i:'#ffb0c0', l:'#ffc8d4', k:INK, d:'#555566', y:'#e8d8a0', x:'#2c2c38'}},
+  cow:     {t:'cow',              pal:{f:'#ffffff', i:'#ffa0b4', l:'#ffb8c8', k:INK, d:'#4a4a5a', y:'#f0e0b0', x:'#5a5a70'}},
   farmer:  {t:'person', v:'straw', pal:{...SK, h:'#5c3c1c', y:'#f0d060', o:'#e83c3c', b:'#3c5cc8'}},
   bunny:   {t:'critter',v:'bunny', pal:{f:'#f8f8f8', i:'#ffb0c0', l:'#ffffff', k:INK, d:'#c8c8d0'}},
-  crab:    {t:'critter',v:'crab',  pal:{f:'#e84828', i:'#e84828', l:'#ff9a78', k:INK, d:'#a02810'}},
+  crab:    {t:'crab',              pal:{r:'#e84828', d:'#a02810', l:'#ff9a78', m:'#7a1808', k:INK, w:'#ffffff'}},
   fisher:  {t:'person', v:'cap',   pal:{...SK, c:'#fcd000', h:'#3c2c1c', o:'#fcd000', b:'#2c4c9c'}},
   turtle:  {t:'critter',v:'none',  pal:{f:'#48b450', l:'#d0ec90', k:INK, d:'#2c7c30', x:'#2c7c30'}},
   gull:    {t:'bird',   v:'plain', pal:{f:'#ffffff', y:'#fca030', k:INK, w:'#9ca4b8'}},
@@ -776,6 +773,12 @@ function setBar(sayZ, sayH, fb){
   shop.speech = sayH || '';
 }
 function setupShop(){
+  if (L.type === 'fish'){
+    shop.queue = Array.from({ length:L.need }, makeOrder);
+    Object.assign(shop, { correct:0, phase:'off', marks:[], carry:-1, last:'' });
+    initTank();
+    return;
+  }
   shop.queue = shuffle(SHOP_ITEMS.map((_, i) => i)).slice(0, L.need);
   Object.assign(shop, { correct:0, phase:'off', marks:[], carry:-1, cursor:0, showCursor:false, last:'' });
 }
@@ -784,11 +787,13 @@ function nextCustomer(){
   shop.sprite = pool[Math.floor(Math.random() * pool.length)]; shop.last = shop.sprite;
   shop.target = shop.queue[shop.correct];
   shop.tpl = Math.floor(Math.random() * ASK_TPL.length);
+  if (L.type === 'fish'){ shop.tpl = Math.floor(Math.random() * SEA_TPL.length); sea.bucket = []; stockFor(shop.target); }
   Object.assign(shop, { x:236, phase:'enter', carry:-1 });
   beep(1319, .12, 'square', .04); beep(1047, .2, 'square', .04, .14); // 自動門叮咚
   setBar('ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！', '歡迎光臨！');
 }
 function askNow(){
+  if (L.type === 'fish'){ askSea(); return; }
   const it = SHOP_ITEMS[shop.target], t = ASK_TPL[shop.tpl];
   shop.phase = 'ask'; SFX.talk();
   setBar(t[0](it[1]), t[1](it[2]));
@@ -853,6 +858,273 @@ function drawShop(){
   }
 }
 
+/* ---------- 魚店：魚、螃蟹、蝦子 ---------- */
+const FISH_COLORS = [
+  { z:'ㄏㄨㄥˊ ㄙㄜˋ', h:'紅色', c:'#f04838', d:'#a82020', l:'#ff9888' },
+  { z:'ㄏㄨㄤˊ ㄙㄜˋ', h:'黃色', c:'#fcd000', d:'#c08c00', l:'#fff080' },
+  { z:'ㄌㄢˊ ㄙㄜˋ',   h:'藍色', c:'#3c78f0', d:'#1c48b0', l:'#90b8ff' },
+  { z:'ㄌㄩˋ ㄙㄜˋ',   h:'綠色', c:'#3cc048', d:'#1c8028', l:'#90e098' },
+  { z:'ㄗˇ ㄙㄜˋ',     h:'紫色', c:'#b058f0', d:'#7028b0', l:'#dca8ff' }];
+const NUMS = [null, ['ㄧ ㄓ','一隻'], ['ㄌㄧㄤˇ ㄓ','兩隻'], ['ㄙㄢ ㄓ','三隻']];
+const SEA_KINDS = { fish:{ z:'ㄩˊ', h:'魚', e:'🐟' }, crab:{ z:'ㄆㄤˊ ㄒㄧㄝˋ', h:'螃蟹', e:'🦀' }, shrimp:{ z:'ㄒㄧㄚ ˙ㄗ', h:'蝦子', e:'🦐' },
+  octopus:{ z:'ㄓㄤ ㄩˊ', h:'章魚', e:'🐙' }, turtle:{ z:'ㄨ ㄍㄨㄟ', h:'烏龜', e:'🐢' } };
+const SEA_TPL = [
+  [z => `ㄨㄛˇ ㄧㄠˋ ${z}。`, h => `我要${h}。`],
+  [z => `ㄑㄧㄥˇ ㄍㄟˇ ㄨㄛˇ ${z}！`, h => `請給我${h}！`],
+  [z => `ㄨㄛˇ ㄒㄧㄤˇ ㄇㄞˇ ${z}。`, h => `我想買${h}。`]];
+const TANK = { x0:10, y0:8, x1:246, y1:124 };
+const NET_REST = { x:84, y:140 }, BUCKET = { x:100, y:154 };
+const seaName = (kind, ci) => kind === 'fish'
+  ? [`${FISH_COLORS[ci].z} ˙ㄉㄜ ㄩˊ`, `${FISH_COLORS[ci].h}的魚`]
+  : [SEA_KINDS[kind].z, SEA_KINDS[kind].h];
+const linePhrase = l => { const nm = seaName(l.kind, l.ci); return [`${NUMS[l.n][0]} ${nm[0]}`, `${NUMS[l.n][1]}${nm[1]}`]; };
+const matches = (c, l) => c.kind === l.kind && (l.kind !== 'fish' || c.ci === l.ci);
+
+// 像素小圖（自動描黑邊），寬 w 高 h，畫在 (w+2)×(h+2) 的畫布上
+function pixSprite(w, h, colorAt){
+  const c = document.createElement('canvas'); c.width = w + 2; c.height = h + 2;
+  const g = c.getContext('2d');
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const col = colorAt(x, y); if (col){ g.fillStyle = col; g.fillRect(x + 1, y + 1, 1, 1); } }
+  const W = w + 2, H = h + 2, d = g.getImageData(0, 0, W, H).data, op = i => d[i * 4 + 3] > 0, edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const i = y * W + x; if (op(i)) continue;
+    if ((x > 0 && op(i - 1)) || (x < W - 1 && op(i + 1)) || (y > 0 && op(i - W)) || (y < H - 1 && op(i + W))) edge.push(i);
+  }
+  g.fillStyle = INK; edge.forEach(i => g.fillRect(i % W, Math.floor(i / W), 1, 1));
+  return c;
+}
+const fromRows = (rows, pal) => (x, y) => { const ch = rle(rows[y] || '16.')[x]; return ch === '.' ? null : (pal[ch] || null); };
+let SEASPR = null;
+function ensureSea(){
+  if (SEASPR) return;
+  SEASPR = {
+    fish: FISH_COLORS.map(col => pixSprite(16, 10, (x, y) => {
+      const body = ((x - 9.5) / 5.6) ** 2 + ((y - 4.5) / 3.8) ** 2 <= 1;
+      const tail = x <= 3 && Math.abs(y - 4.5) <= 0.8 + (3 - x);
+      if (body){
+        if (x === 12 && y === 3) return INK;
+        if (x === 11 && y === 2) return '#ffffff';
+        if (x === 7) return col.d;
+        return y >= 6 ? col.l : col.c;
+      }
+      return tail ? col.d : null;
+    })),
+    crab: pixSprite(16, 10, fromRows(['1.2d10.2d1.','2d1.1d8.1d1.2d','1.3d1.1k4.1k1.3d1.','2.2d1.1k4.1k1.2d2.','3.10r3.',
+      '2.12r2.','2.12r2.','3.10d3.','2.1d1.1d6.1d1.1d2.','1.1d2.1d6.1d2.1d1.'], { r:'#e84828', d:'#a02810', k:INK })),
+    shrimp: pixSprite(16, 10, fromRows(['10.6a','9.1a6.','4.7p1k2p2.','3.11p2.','2.3p1s3p1s3p3.',
+      '1.3p1s3p1s2p5.','1.3p2.1l1.1l1.1l5.','2d1p13.','3d13.','16.'], { p:'#ff9078', s:'#e0604c', k:INK, a:'#d06040', l:'#e07060', d:'#e0604c' })),
+    octopus: pixSprite(16, 10, fromRows(['5.6o5.','4.8o4.','3.10o3.','3.2o1w1k2o1w1k2o3.','3.10o3.','2.12o2.',
+      '2.1o1.2o1.2o1.2o1.1o2.','1.1o2.1o2.2o2.1o2.1o1.','2o3.1o4.1o3.2o','16.'], { o:'#e06090', w:'#ffffff', k:INK })),
+    turtle: pixSprite(16, 10, fromRows(['16.','4.6g6.','3.8g2.2s1.','2.3g1h3g1h2g1s1k2s','1.11g4s','1.2h2g2h2g2h2g3.',
+      '2.12d2.','1.2s8.2s3.','2s10.2s2.','16.'], { g:'#48a848', h:'#2c7830', d:'#c8b060', s:'#a0d070', k:INK }))
+  };
+}
+const seaSprite = c => c.kind === 'fish' ? SEASPR.fish[c.ci] : SEASPR[c.kind];
+const SEA_DOT = { crab:'#e84828', shrimp:'#ff9078', octopus:'#e06090', turtle:'#48a848' };
+const seaColor = c => c.kind === 'fish' ? FISH_COLORS[c.ci].c : SEA_DOT[c.kind];
+
+const sea = { list:[], net:null, bucket:[] };
+function spawnSea(kind, ci){
+  const dir = Math.random() < .5 ? -1 : 1;
+  sea.list.push({
+    kind, ci: kind === 'fish' ? (ci ?? Math.floor(Math.random() * 5)) : -1,
+    x: TANK.x0 + 20 + Math.random() * (TANK.x1 - TANK.x0 - 40),
+    y: kind === 'crab' ? TANK.y1 - 13 : TANK.y0 + 14 + Math.random() * (TANK.y1 - TANK.y0 - 40),
+    vx: dir * (kind === 'crab' ? .35 : .3 + Math.random() * .35), vy: 0, ph: Math.random() * 6, caught: false });
+}
+function initTank(){
+  sea.list = []; sea.net = null; sea.bucket = [];
+  for (let k = 0; k < 8; k++) spawnSea('fish', k % 5);
+  spawnSea('crab'); spawnSea('shrimp'); spawnSea('shrimp'); spawnSea('octopus'); spawnSea('turtle');
+}
+// 確保魚缸裡有足夠客人要的東西（多放一隻，抓錯放回也還夠）
+function stockFor(lines){
+  lines.forEach(l => {
+    let have = sea.list.filter(c => !c.caught && matches(c, l)).length;
+    while (have < l.n + 1){ spawnSea(l.kind, l.ci); have++; }
+  });
+  while (sea.list.length > 16){
+    const i = sea.list.findIndex(c => !c.caught && !lines.some(l => matches(c, l)));
+    if (i < 0) break;
+    sea.list.splice(i, 1);
+  }
+}
+// 一位客人的訂單：一種或兩種的組合
+function makeOrder(){
+  const fishLine = (max) => ({ kind:'fish', ci: Math.floor(Math.random() * 5), n: 1 + Math.floor(Math.random() * max) });
+  const KINDS = ['crab', 'shrimp', 'octopus', 'turtle'];
+  const other = () => ({ kind: KINDS[Math.floor(Math.random() * KINDS.length)], ci: -1, n: 1 + Math.floor(Math.random() * 2) });
+  const r = Math.random();
+  let lines;
+  if (r < .3) lines = [fishLine(3)];
+  else if (r < .5) lines = [other()];
+  else if (r < .8) lines = [fishLine(2), other()];
+  else { const a = fishLine(2); let b; do { b = fishLine(1); } while (b.ci === a.ci); lines = [a, b]; }
+  lines.forEach(l => { l.got = 0; });
+  return lines;
+}
+// 不顯示要抓什麼；抓到的水產直接畫在遊戲畫面裡客人旁邊（見 drawSea），對話列不多佔一行
+function seaProgress(){ return ''; }
+function askSea(){
+  const ph = shop.target.map(linePhrase), t = SEA_TPL[shop.tpl];
+  shop.phase = 'ask'; SFX.talk();
+  setBar(t[0](ph.map(p => p[0]).join('，ㄏㄞˊ ㄧㄡˇ ')), t[1](ph.map(p => p[1]).join('，還有')), seaProgress());
+}
+function seaTap(gx, gy){
+  if (state.mode !== 'play' || shop.phase !== 'ask' || sea.net) return;
+  if (gx < TANK.x0 || gx > TANK.x1 || gy < TANK.y0 || gy > TANK.y1) return;
+  let best = null, bd = 18;
+  sea.list.forEach(c => { if (c.caught) return; const d = Math.hypot(c.x - gx, c.y - gy); if (d < bd){ bd = d; best = c; } });
+  if (best) best.caught = true;
+  sea.net = { phase:'swoop', t:0, x:NET_REST.x, y:NET_REST.y, fx:NET_REST.x, fy:NET_REST.y, tx: best ? best.x : gx, ty: best ? best.y : gy, c: best };
+  SFX.blip();
+}
+function netTo(n, tx, ty, frames){
+  const k = Math.min(1, n.t / frames);
+  n.x = n.fx + (tx - n.fx) * k; n.y = n.fy + (ty - n.fy) * k;
+  return k >= 1;
+}
+function netPhase(n, phase){ n.phase = phase; n.t = 0; n.fx = n.x; n.fy = n.y; }
+function judgeNet(){
+  const n = sea.net, c = n.c, fb = document.getElementById('sbFb');
+  if (!c){ netPhase(n, 'miss'); fb.innerHTML = Z('ㄇㄟˊ ㄓㄨㄚ ㄉㄠˋ，ㄗㄞˋ ㄕˋ ㄧ ㄘˋ！', '沒抓到，再試一次！') + seaProgress(); return; }
+  const line = shop.target.find(l => l.got < l.n && matches(c, l));
+  if (line){ line.got++; SFX.ok(); netPhase(n, 'bucket'); }
+  else {
+    state.mistakes++; SFX.no(); netPhase(n, 'drop');
+    const nm = seaName(c.kind, c.ci);
+    fb.innerHTML = Z(`ㄓㄜˋ ㄕˋ ${nm[0]}，ㄧㄠˋ ㄔㄨㄥˊ ㄓㄨㄚ ˙ㄛ！`, `這是${nm[1]}，要重抓喔！`) + seaProgress();
+  }
+}
+function finishCatch(){
+  const c = sea.net.c;
+  sea.list.splice(sea.list.indexOf(c), 1); sea.bucket.push(c); sea.net = null;
+  if (shop.target.every(l => l.got >= l.n)){
+    shop.correct++; shop.phase = 'thanks'; shop.timer = 60; shop.carry = 99;
+    setTimeout(SFX.item, 120);
+    setBar('ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '謝謝你！', seaProgress());
+    renderHud(true);
+  } else document.getElementById('sbFb').innerHTML = seaProgress();
+}
+function updateSea(){
+  for (const c of sea.list){
+    if (c.caught) continue;
+    c.ph += .05;
+    if (c.kind === 'crab'){
+      if (Math.random() < .01) c.vx = (Math.random() < .5 ? -1 : 1) * (Math.random() < .3 ? 0 : .35);
+      c.x += c.vx; c.y += (TANK.y1 - 13 - c.y) * .08;
+    } else if (c.kind === 'shrimp'){
+      if (Math.random() < .015) c.vx = (Math.random() < .5 ? -1 : 1) * 1.4;
+      c.vx *= .97; if (Math.abs(c.vx) < .15) c.vx = (c.vx < 0 ? -1 : 1) * .15;
+      c.x += c.vx; c.y += Math.sin(c.ph) * .2 + c.vy; c.vy *= .95;
+    } else if (c.kind === 'octopus'){
+      c.x += c.vx * .6; c.y += Math.sin(c.ph * .8) * .55 + c.vy; c.vy *= .95;
+    } else if (c.kind === 'turtle'){
+      c.x += (c.vx < 0 ? -1 : 1) * .25; c.y += Math.sin(c.ph * .5) * .15 + c.vy; c.vy *= .95;
+      if (Math.random() < .002) c.vx *= -1;
+    } else {
+      c.x += c.vx; c.y += Math.sin(c.ph) * .25 + c.vy; c.vy *= .95;
+      if (Math.abs(c.vx) > .7) c.vx *= .99;
+      if (Math.random() < .003) c.vx *= -1;
+    }
+    if (c.x < TANK.x0 + 10){ c.x = TANK.x0 + 10; c.vx = Math.abs(c.vx) || .3; }
+    if (c.x > TANK.x1 - 10){ c.x = TANK.x1 - 10; c.vx = -(Math.abs(c.vx) || .3); }
+    if (c.kind !== 'crab') c.y = Math.max(TANK.y0 + 10, Math.min(TANK.y1 - 22, c.y));
+  }
+  const n = sea.net; if (!n) return;
+  n.t++;
+  if (n.phase === 'swoop'){ if (netTo(n, n.tx, n.ty, 9)) judgeNet(); }
+  else if (n.phase === 'bucket'){ const done = netTo(n, BUCKET.x, BUCKET.y - 10, 12); n.c.x = n.x; n.c.y = n.y; if (done) finishCatch(); }
+  else if (n.phase === 'drop'){
+    n.x = n.fx + (n.t % 6 < 3 ? -1 : 1); n.c.x = n.x; n.c.y = n.y;
+    if (n.t >= 24){ const c = n.c; c.caught = false; c.vx = (Math.random() < .5 ? -1 : 1) * (c.kind === 'crab' ? .4 : 1); c.vy = -.5; netPhase(n, 'back'); }
+  }
+  else if (n.phase === 'miss'){ if (n.t >= 14) netPhase(n, 'back'); }
+  else if (n.phase === 'back'){ if (netTo(n, NET_REST.x, NET_REST.y, 9)) sea.net = null; }
+}
+let seaCounter = null;
+function renderFishBg(){
+  ensureSea();
+  const c = document.createElement('canvas'); c.width = 256; c.height = 192;
+  const g = c.getContext('2d');
+  P(g, 0, 0, '#d8eef6', 256, 132);
+  for (let x = 0; x < 256; x += 16) P(g, x, 0, '#c2deea', 1, 132);
+  for (let y = 0; y < 132; y += 16) P(g, 0, y, '#c2deea', 256, 1);
+  const tw = TANK.x1 - TANK.x0, th = TANK.y1 - TANK.y0;
+  P(g, TANK.x0 - 4, TANK.y0 - 4, INK, tw + 8, th + 8); P(g, TANK.x0 - 3, TANK.y0 - 3, '#8c9cb0', tw + 6, th + 6);
+  const bands = ['#6cc4fc', '#5cb4f6', '#4ea2ee', '#408ee4', '#347ad8', '#2a68c8'], bh = th / bands.length;
+  bands.forEach((col, k) => P(g, TANK.x0, Math.round(TANK.y0 + k * bh), col, tw, Math.ceil(bh)));
+  P(g, TANK.x0, TANK.y1 - 8, '#f0d890', tw, 8);
+  for (let i = 0; i < 40; i++) P(g, TANK.x0 + ri(i, 1, 3, tw), TANK.y1 - 8 + ri(i, 2, 4, 8), '#d8b868');
+  [28, 64, 140, 196, 230].forEach((sx, k) => { const h = 18 + (k % 3) * 8; for (let j = 0; j < h; j++) P(g, sx + (Math.floor(j / 3) % 2), TANK.y1 - 8 - j, j % 5 ? '#2ca048' : '#48c060', 2, 1); });
+  [[104, 4], [172, 3]].forEach(([rx, sz]) => { P(g, rx - sz * 2, TANK.y1 - 8 - sz, INK, sz * 4, sz + 1); P(g, rx - sz * 2 + 1, TANK.y1 - 7 - sz, '#8c8ca0', sz * 4 - 2, sz); });
+  for (let k = 0; k < 10; k++){ P(g, TANK.x0 + 6 + k, TANK.y0 + 4 + k, '#bfe6ff'); P(g, TANK.x0 + 12 + k, TANK.y0 + 4 + k, '#bfe6ff'); }
+  for (let y = 132; y < 192; y += 8) for (let x = 0; x < 256; x += 8) P(g, x, y, ((x + y) / 8) % 2 ? '#c4d2dc' : '#dfe8ee', 8, 8);
+  P(g, 0, 130, INK, 256, 2);
+  P(g, 214, 134, INK, 36, 58); P(g, 216, 136, '#bfe3f5', 32, 56); P(g, 231, 136, INK, 2, 56);
+  P(g, 212, 186, '#2c78e0', 40, 6);
+  seaCounter = document.createElement('canvas'); seaCounter.width = 256; seaCounter.height = 192;
+  const k2 = seaCounter.getContext('2d');
+  P(k2, 8, 162, INK, 104, 28); P(k2, 9, 163, '#5c9cd0', 102, 26); P(k2, 9, 163, '#3c78b0', 102, 4);
+  for (let x = 16; x < 108; x += 12) P(k2, x, 172, '#ffffff', 6, 2);
+  return c;
+}
+function drawNet(x, y){
+  x = Math.round(x); y = Math.round(y);
+  const hx = 70, hy = 156, len = Math.max(1, Math.abs(hx - x), Math.abs(hy - y - 6));
+  const pt = i => [Math.round(x + (hx - x) * i / len), Math.round(y + 6 + (hy - y - 6) * i / len)];
+  for (let i = 0; i <= len; i++){ const [px, py] = pt(i); P(ctx, px - 1, py - 1, INK, 3, 3); }
+  for (let i = 0; i <= len; i++){ const [px, py] = pt(i); P(ctx, px, py, '#c8843c', 1, 1); }
+  for (let dy = -6; dy <= 6; dy++) for (let dx = -9; dx <= 9; dx++){
+    const e = (dx / 9) ** 2 + (dy / 6) ** 2;
+    if (e <= 1 && e > .8) P(ctx, x + dx, y + dy, INK);
+    else if (e <= .8 && e > .6) P(ctx, x + dx, y + dy, '#d8dce8');
+    else if (e <= .6 && (dx + dy + 40) % 3 === 0) P(ctx, x + dx, y + dy, '#eef6ff');
+  }
+}
+function drawSea(){
+  ctx.drawImage(bg, 0, 0);
+  const blink = Math.floor(frame / 16) % 2;
+  for (let k = 0; k < 7; k++){
+    const bx = TANK.x0 + 18 + k * 34 + (k % 2) * 6, by = TANK.y1 - 14 - ((frame * .4 + k * 41) % (TANK.y1 - TANK.y0 - 18));
+    if (by < TANK.y0 + 3) continue;
+    P(ctx, bx, by - 1, '#e6f6ff', 2, 1); P(ctx, bx - 1, by, '#e6f6ff', 1, 2); P(ctx, bx + 2, by, '#e6f6ff', 1, 2); P(ctx, bx, by + 2, '#e6f6ff', 2, 1);
+  }
+  sea.list.forEach(c => {
+    const bob = c.kind === 'crab' && c.vx && Math.floor(frame / 8) % 2 ? 1 : 0;
+    drawSprite(seaSprite(c), Math.round(c.x - 9), Math.round(c.y - 6) - bob, c.kind !== 'crab' && c.kind !== 'octopus' && c.vx < 0);
+  });
+  const n = sea.net;
+  if (n && n.phase === 'miss'){
+    const r = 4 + n.t / 2;
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx, sy]) => P(ctx, Math.round(n.x + sx * r), Math.round(n.y + sy * r * .6), '#ffffff', 2, 2));
+  }
+  drawSprite(SPR.player.front[0], 55, 146, false);
+  ctx.drawImage(seaCounter, 0, 0);
+  // 水桶
+  const bx = BUCKET.x, by = BUCKET.y;
+  P(ctx, bx - 9, by - 6, INK, 18, 16); P(ctx, bx - 8, by - 5, '#a8b4c4', 16, 14); P(ctx, bx - 8, by - 5, '#5cb4fc', 16, 4);
+  sea.bucket.slice(-5).forEach((c, k) => P(ctx, bx - 7 + k * 3, by - 7, seaColor(c), 2, 2));
+  drawNet(n ? n.x : NET_REST.x, n ? n.y : NET_REST.y);
+  if (shop.phase !== 'off' && shop.phase !== 'wait'){
+    const walking = shop.phase === 'enter' || shop.phase === 'leave';
+    const fr = walking ? Math.floor(frame / 6) % 2 : 0, cx = Math.round(shop.x);
+    drawSprite(SPR[shop.sprite].front[fr], cx, 148, shop.phase === 'enter');
+    if (shop.phase === 'ask'){
+      const qx = cx + 4, qy = 136 - blink;
+      P(ctx, qx, qy, INK, 9, 10); P(ctx, qx + 1, qy + 1, '#ffffff', 7, 8);
+      GLYPH_Q.forEach((row, yy) => [...row].forEach((ch, xx) => { if (ch === '#') P(ctx, qx + 2 + xx, qy + 2 + yy, '#2c64f0'); }));
+    }
+    if (shop.phase === 'ask' || shop.phase === 'thanks'){ // 抓到的水產排在客人右手邊
+      sea.bucket.forEach((c, k) => drawSprite(seaSprite(c), cx + 20 + k * 19, 156 - (k % 2) * 2, false));
+    }
+    if (shop.carry === 99 && shop.phase === 'leave'){ // 裝魚的袋子
+      P(ctx, cx + 3, 128 - blink, INK, 12, 14); P(ctx, cx + 4, 129 - blink, '#eef6ff', 10, 12); P(ctx, cx + 4, 134 - blink, '#5cb4fc', 10, 7);
+      sea.bucket.slice(-3).forEach((c, k) => P(ctx, cx + 5 + k * 3, 136 - blink, seaColor(c), 2, 2));
+    }
+  }
+}
+
 /* ================= 音效與朗讀 ================= */
 let AC = null, muted = false;
 function audio(){
@@ -911,13 +1183,14 @@ LEVELS.forEach((lv, i) => {
   addHz(lv.name, lv.han); addHz(lv.giver.name, lv.giver.han); addHz(lv.win[0], lv.win[1]);
   addHz(LV_NO[i], LV_NO_H[i]);
   lv.intro.forEach(l => addHz(l[0], l[1]));
+  if (lv.foods) Object.values(lv.foods).forEach(fd => addHz(fd.z, fd.h));
   lv.npcs.forEach(n => {
-    addHz(n.name, n.han); addHz(n.hi[0], n.hi[1]); addHz(n.item.z, n.item.h);
-    n.qs.forEach(q => { if (q.say) addHz(q.say[0], q.say[1]); addHz(q.q[0], q.q[1]); if (!q.zyOnly) q.opts.forEach(o => addHz(o[0], o[2])); });
+    addHz(n.name, n.han); if (n.hi) addHz(n.hi[0], n.hi[1]); if (n.item) addHz(n.item.z, n.item.h);
+    (n.qs || []).forEach(q => { if (q.say) addHz(q.say[0], q.say[1]); addHz(q.q[0], q.q[1]); if (!q.zyOnly) q.opts.forEach(o => addHz(o[0], o[2])); });
   });
 });
 SHOP_ITEMS.forEach(it => addHz(it[1], it[2]));
-[['ㄊㄧㄥ','聽'],['ㄏㄠˇ','好'],['ㄒㄧㄠˇ ㄇㄠˋ ㄒㄧㄢˇ','小冒險'],['ㄒㄩㄢˇ ㄧ ㄍㄨㄢ ˙ㄅㄚ！','選一關吧！'],
+[['ㄊㄧㄥ','聽'],['ㄏㄠˇ','好'],['ㄒㄧㄣ ㄞˋ ㄒㄧㄠˇ ㄓㄣˋ','心愛小鎮'],['ㄒㄩㄢˇ ㄧ ㄍㄨㄢ ˙ㄅㄚ！','選一關吧！'],
  ['ㄧㄠˋ ㄓㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','要找的東西'],['ㄎㄞ ㄕˇ','開始'],['ㄉㄚˊ ㄉㄨㄟˋ ˙ㄌㄜ！','答對了！'],
  ['ㄗㄞˋ ㄒㄧㄤˇ ㄧ ㄒㄧㄤˇ！','再想一想！'],['ㄋㄧˇ ㄉㄜˊ ㄉㄠˋ','你得到'],['ㄍㄨㄛˋ ㄍㄨㄢ ˙ㄌㄜ！','過關了！'],
  ['ㄑㄩㄢˊ ㄅㄨˋ ㄨㄢˊ ㄔㄥˊ！ㄋㄧˇ ㄏㄠˇ ㄅㄤˋ！','全部完成！你好棒！'],['ㄗㄞˋ ㄨㄢˊ ㄧ ㄘˋ','再玩一次'],
@@ -963,29 +1236,39 @@ function loadLevel(i, got){
   state.lv = i; L = LEVELS[i]; state.mistakes = 0;
   state.got = new Set(got || []);
   $('town').hidden = true;
-  sbar().hidden = L.type !== 'shop';
-  if (L.type === 'shop'){ grid = []; npcs = []; bg = renderShopBg(); setupShop(); renderHud(); return; }
+  const store = L.type === 'shop' || L.type === 'fish';
+  sbar().hidden = !store;
+  if (store){ grid = []; npcs = []; bg = L.type === 'fish' ? renderFishBg() : renderShopBg(); setupShop(); renderHud(); return; }
   grid = L.map.map(r => r.padEnd(COLS, '.').slice(0, COLS).split(''));
-  npcs = [];
+  npcs = []; foods = []; follower = null;
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
     const ch = grid[y][x];
-    if (ch === 'P'){ Object.assign(player, { x, y, px:x*T, py:y*T, moving:false, face:'d', step:0 }); grid[y][x] = '.'; }
+    if (L.foods && L.foods[ch]){ foods.push({ id:ch, x, y, ...L.foods[ch], eaten:false }); grid[y][x] = '.'; continue; }
+    if (ch === 'P'){ walkPath = null; Object.assign(player, { x, y, px:x*T, py:y*T, moving:false, face:'d', step:0 }); grid[y][x] = '.'; }
     const n = L.npcs.find(n => n.key === ch);
     if (n){
       const idx = L.npcs.indexOf(n);
-      npcs.push({ ...n, idx, x, y, done: state.got.has(idx), qi: Math.floor(Math.random() * n.qs.length) });
+      npcs.push({ ...n, idx, x, y, done: state.got.has(idx), qi: n.qs ? Math.floor(Math.random() * n.qs.length) : 0 });
       grid[y][x] = '.';
     }
   }
+  if (L.type === 'feed') setupFeed();
   bg = renderBg(L);
   renderHud();
 }
 
 function renderHud(popIdx){
+  setTimeout(fitStage, 0);
   $('lvname').innerHTML = `<span class="tag">LV ${state.lv + 1}</span><span>${Z(L.name)}</span><span class="info" aria-hidden="true">?</span>`;
-  if (L.type === 'shop'){
-    $('slots').innerHTML = `<div class="slot got ${popIdx ? 'pop' : ''}"><span class="ic">🛍️</span><span class="nm">${Z('ㄉㄚˊ ㄉㄨㄟˋ')} <b>${shop.correct}</b> / ${L.need}</span></div>
+  if (L.type === 'shop' || L.type === 'fish'){
+    const lab = L.type === 'fish' ? ['🐟', Z('ㄇㄞˋ ㄔㄨ', '賣出')] : ['🛍️', Z('ㄉㄚˊ ㄉㄨㄟˋ')];
+    $('slots').innerHTML = `<div class="slot got ${popIdx ? 'pop' : ''}"><span class="ic">${lab[0]}</span><span class="nm">${lab[1]} <b>${shop.correct}</b> / ${L.need}</span></div>
       <div class="pips" aria-hidden="true">${Array.from({ length:L.need }, (_, i) => `<i class="${i < shop.correct ? 'on' : ''}"></i>`).join('')}</div>`;
+    return;
+  }
+  if (L.type === 'feed'){
+    $('slots').innerHTML = L.npcs.map((n, i) =>
+      `<div class="slot ${state.got.has(i) ? 'got' : ''} ${popIdx === i ? 'pop' : ''}"><span class="ic">${n.e}</span><span class="nm">${Z(n.name)}</span></div>`).join('');
     return;
   }
   $('slots').innerHTML = L.npcs.map((n, i) =>
@@ -994,6 +1277,7 @@ function renderHud(popIdx){
 
 /* ---------- 疊層畫面 ---------- */
 function showOv(html, center){
+  ov.onclick = null;
   ov.innerHTML = html; ov.className = 'ov' + (center ? ' center' : ''); ov.hidden = false;
   held = []; setPad();
   const f = ov.querySelector('[data-focus]') || ov.querySelector('button');
@@ -1008,33 +1292,37 @@ function drawPortrait(name){
 const spkBtn = () => canSpeak ? `<button class="spk" data-speak>🔊 ${Z('ㄊㄧㄥ')}</button>` : '';
 
 /* ---------- 主畫面：小鎮地圖 ---------- */
-// 四個區域（圖塊座標），順序跟 LEVELS 一樣：農場、海邊、森林、便利商店
+// 三條街道切出六個街區：上排 農場｜魚店｜海邊，下排 森林｜小公園｜便利商店
+// 區域（圖塊座標）順序跟 LEVELS 一樣：農場、海邊、森林、便利商店、魚店
 const ZONES = [
-  { x0:0, y0:0, x1:6,  y1:4,  pos:'tl' },
-  { x0:9, y0:0, x1:15, y1:4,  pos:'tr' },
-  { x0:0, y0:7, x1:6,  y1:11, pos:'bl' },
-  { x0:9, y0:7, x1:15, y1:11, pos:'br' }];
+  { x0:0,  y0:0, x1:4,  y1:4,  pos:'tl' },
+  { x0:11, y0:0, x1:15, y1:4,  pos:'tr' },
+  { x0:0,  y0:6, x1:4,  y1:11, pos:'bl' },
+  { x0:11, y0:6, x1:15, y1:11, pos:'br' },
+  { x0:6,  y0:0, x1:9,  y1:4,  pos:'tc' }];
 const BLURB = [
   ['ㄅㄤ ㄇㄚ ˙ㄇㄚ ㄓㄠˇ ㄗㄨㄛˋ ㄉㄢˋ ㄍㄠ ˙ㄉㄜ ㄘㄞˊ ㄌㄧㄠˋ','幫媽媽找做蛋糕的材料'],
   ['ㄅㄤ ㄍㄜ ˙ㄍㄜ ㄓㄠˇ ㄉㄨㄟ ㄕㄚ ㄅㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','幫哥哥找堆沙堡的東西'],
-  ['ㄓㄠˇ ㄌㄨˋ ㄧㄥˊ ㄧㄠˋ ㄩㄥˋ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','找露營要用的東西'],
-  ['ㄉㄤ ㄉㄧㄢˋ ㄩㄢˊ，ㄅㄤ ㄎㄜˋ ㄖㄣˊ ㄓㄠˇ ㄕㄤ ㄆㄧㄣˇ','當店員，幫客人找商品']];
+  ['ㄅㄤ ㄉㄨㄥˋ ㄨˋ ㄓㄠˇ ㄒㄧˇ ㄏㄨㄢ ㄔ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','幫動物找喜歡吃的東西'],
+  ['ㄉㄤ ㄉㄧㄢˋ ㄩㄢˊ，ㄅㄤ ㄎㄜˋ ㄖㄣˊ ㄓㄠˇ ㄕㄤ ㄆㄧㄣˇ','當店員，幫客人找商品'],
+  ['ㄉㄤ ㄌㄠˇ ㄅㄢˇ，ㄩㄥˋ ㄩˊ ㄨㄤˇ ㄓㄨㄚ ㄏㄞˇ ㄌㄧˇ ˙ㄉㄜ ㄉㄨㄥˋ ㄨˋ','當老闆，用魚網抓海裡的動物']];
 BLURB.forEach(b => addHz(b[0], b[1]));
+// = 馬路　p 人行道　q 魚店　S 便利商店　o 噴水池　c 菜園
 const TOWN_MAP = [
-  '##.H.*.==,,~~~~~',
-  '#.cccc.==.,,~~~~',
-  '..cccc.==T.,,~~~',
-  '*......==..,,,~~',
-  '#.*..#.==T..,,,~',
+  '#.H.*=pppp=.,~~~',
+  'cccc.=qqqq=.,,~~',
+  'cccc.=qqqq=T.,,~',
+  '*....=pppp=..,,~',
+  '#.*.#=pppp=T..,,',
   '================',
-  '================',
-  '#..#.##==ppppppp',
-  '#.#..#.==pSSSSp#',
-  '..#.#..==pSSSSpp',
-  '#..*.#.==ppppppp',
-  '##.#.##==#ppppp#'];
+  '#.#.#=*..*=ppppp',
+  '.#..#=.oo.=SSSSp',
+  '#..#.=.oo.=SSSSp',
+  '..#.*=*..*=ppppp',
+  '#.#..=....=p#ppp',
+  '##.##=#..#=ppppp'];
 const TOWN_DECOR = [
-  { s:'hen', x:4, y:3 }, { s:'crab', x:10, y:3 }, { s:'bear', x:4, y:9 }, { s:'clerk', x:11, y:10 }];
+  { s:'hen', x:2, y:3 }, { s:'crab', x:13, y:3 }, { s:'bear', x:2, y:8 }, { s:'clerk', x:12, y:9 }, { s:'fisher', x:8, y:3 }];
 THEMES.town = { ...THEMES.farm, g:'#d6d2c8', gd:'#c4beb2', gl:'#e8e4da', tuft:false };
 let townBg = null, townSel = -1;
 
@@ -1044,16 +1332,16 @@ function renderTownBg(){
   const g = c.getContext('2d');
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
     const ch = TOWN_MAP[y][x], ox = x * T, oy = y * T;
-    const z = zoneAt(x, y), th = THEMES[['farm','beach','forest','town'][z]] || THEMES.farm;
-    if (ch === '='){ // 柏油路，路中間畫黃色虛線
+    const z = zoneAt(x, y), th = THEMES[['farm','beach','forest','town','town'][z]] || THEMES.farm;
+    if (ch === '='){ // 柏油路，路中間畫黃色虛線，路口不畫
       P(g, ox, oy, '#6c6c7c', 16, 16);
       for (let i = 0; i < 4; i++) P(g, ox + ri(x,y,i+5,16), oy + ri(x,y,i+9,16), '#7a7a8c');
-      const horiz = y === 5 || y === 6, vert = x === 7 || x === 8;
-      if (horiz && !vert && y === 5) P(g, ox + 4, oy + 15, '#fcd000', 8, 2);
-      if (vert && !horiz && x === 7) P(g, ox + 15, oy + 4, '#fcd000', 2, 8);
+      const horiz = y === 5, vert = x === 5 || x === 10;
+      if (horiz && !vert) P(g, ox + 4, oy + 7, '#fcd000', 8, 2);
+      if (vert && !horiz) P(g, ox + 7, oy + 4, '#fcd000', 2, 8);
       continue;
     }
-    if (ch === 'p' || ch === 'S'){
+    if (ch === 'p' || ch === 'S' || ch === 'q'){
       P(g, ox, oy, '#d6d2c8', 16, 16); P(g, ox, oy, '#bdb8ac', 16, 1); P(g, ox, oy, '#bdb8ac', 1, 16);
       continue;
     }
@@ -1072,13 +1360,34 @@ function renderTownBg(){
     }
   }
   // 便利商店建築（4×2 格）
-  const sx = 10 * T, sy = 8 * T;
+  const sx = 11 * T, sy = 7 * T;
   P(g, sx, sy, INK, 64, 32); P(g, sx + 1, sy + 1, '#f6eedc', 62, 30);
   P(g, sx + 1, sy + 1, '#ff8c1a', 62, 3); P(g, sx + 1, sy + 4, '#2c9c4c', 62, 3); P(g, sx + 1, sy + 7, '#e83c3c', 62, 2);
   P(g, sx + 4, sy + 12, INK, 22, 16); P(g, sx + 5, sy + 13, '#9cd8f4', 20, 14);
   P(g, sx + 38, sy + 12, INK, 22, 16); P(g, sx + 39, sy + 13, '#9cd8f4', 20, 14);
   for (let k = 0; k < 5; k++){ P(g, sx + 7 + k, sy + 15 + k, '#e6f6ff'); P(g, sx + 41 + k, sy + 15 + k, '#e6f6ff'); }
   P(g, sx + 27, sy + 13, INK, 10, 19); P(g, sx + 28, sy + 14, '#bfe3f5', 8, 18); P(g, sx + 31, sy + 14, INK, 1, 18);
+  // 魚店建築（4×2 格）：藍白遮雨棚、大魚招牌、魚缸櫥窗
+  ensureSea();
+  const fx = 6 * T, fy = 1 * T;
+  P(g, fx, fy - 6, INK, 64, 38); P(g, fx + 1, fy - 5, '#e6f4fa', 62, 36);
+  P(g, fx + 14, fy - 10, INK, 36, 10); P(g, fx + 15, fy - 9, '#2c78e0', 34, 8);
+  g.drawImage(SEASPR.fish[1], fx + 23, fy - 11);
+  P(g, fx, fy + 2, INK, 64, 9);
+  for (let k = 0; k < 8; k++){ P(g, fx + 1 + k * 8, fy + 3, k % 2 ? '#ffffff' : '#2c78e0', 8, 7); P(g, fx + 3 + k * 8, fy + 10, k % 2 ? '#ffffff' : '#2c78e0', 4, 2); }
+  P(g, fx + 4, fy + 14, INK, 24, 16); P(g, fx + 5, fy + 15, '#5cb4fc', 22, 14);
+  g.drawImage(SEASPR.fish[0], fx + 6, fy + 16); g.drawImage(SEASPR.shrimp, fx + 11, fy + 19);
+  P(g, fx + 5, fy + 26, '#f0d890', 22, 3);
+  P(g, fx + 36, fy + 14, INK, 24, 16); P(g, fx + 37, fy + 15, '#5cb4fc', 22, 14);
+  g.drawImage(SEASPR.octopus, fx + 39, fy + 16); P(g, fx + 37, fy + 26, '#f0d890', 22, 3);
+  P(g, fx + 29, fy + 15, INK, 6, 17); P(g, fx + 30, fy + 16, '#8c5a2c', 4, 16);
+  // 小公園的噴水池（2×2 格）
+  const ox2 = 7 * T, oy2 = 7 * T;
+  for (let yy = 0; yy < 32; yy++) for (let xx = 0; xx < 32; xx++){
+    const d = (xx - 15.5) ** 2 + (yy - 15.5) ** 2;
+    if (d <= 15 * 15) P(g, ox2 + xx, oy2 + yy, d > 13 * 13 ? INK : d > 11 * 11 ? '#bdb8ac' : '#5cb4fc');
+  }
+  P(g, ox2 + 14, oy2 + 11, INK, 4, 10); P(g, ox2 + 15, oy2 + 12, '#d6d2c8', 2, 8);
   return c;
 }
 
@@ -1089,12 +1398,13 @@ function showTitle(){
   L = LEVELS[0]; npcs = []; sbar().hidden = true;
   if (!townBg) townBg = renderTownBg();
   townSel = -1;
-  $('lvname').innerHTML = `<span class="tag">MAP</span><span>${Z('ㄒㄧㄠˇ ㄓㄣˋ')}</span><span class="info" aria-hidden="true">?</span>`;
+  setTimeout(fitStage, 0);
+  $('lvname').innerHTML = `<span class="tag">MAP</span><span>${Z('ㄉㄧˋ ㄊㄨˊ', '地圖')}</span><span class="info" aria-hidden="true">?</span>`;
   $('slots').innerHTML = `<span class="hud-hint">${Z('ㄒㄩㄢˇ ㄧ ˙ㄍㄜ ㄉㄧˋ ㄈㄤ ˙ㄅㄚ！')}</span>`;
   const town = $('town');
   town.innerHTML = LEVELS.map((lv, i) => `
     <button class="sign ${ZONES[i].pos}" data-zone="${i}">
-      <span class="em">${lv.emoji}</span><span class="nm">${Z(lv.name)}</span><span class="st">${starsHtml(best[i] || 0)}</span>
+      <span class="em">${lv.emoji}</span><span class="nm">${Z(lv.name)}</span>
     </button>`).join('') + `<div class="tip" id="townTip" hidden></div>`;
   town.hidden = false;
   town.querySelectorAll('[data-zone]').forEach(b => {
@@ -1110,7 +1420,11 @@ function selectZone(i, quiet){
   if (i < 0){ tip.hidden = true; return; }
   if (!quiet) SFX.blip();
   const lv = LEVELS[i];
-  const goal = lv.type === 'shop'
+  const goal = lv.type === 'fish'
+    ? '<span class="tip-em">🐟</span><span class="tip-em">🦀</span><span class="tip-em">🦐</span><span class="tip-em">🐙</span><span class="tip-em">🐢</span>'
+    : lv.type === 'feed'
+    ? lv.npcs.map(n => `<span class="tip-em">${n.e}</span>`).join('')
+    : lv.type === 'shop'
     ? `<span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${lv.need} ${Z('ㄊㄧˊ')}</span>`
     : lv.npcs.map(n => `<span class="tip-em" title="${esc(n.item.h)}">${n.item.e}</span>`).join('');
   tip.innerHTML = `<div class="tip-head"><span class="tip-big">${lv.emoji}</span>
@@ -1138,7 +1452,10 @@ function drawTown(){
     const bob = Math.floor((frame + k * 13) / 32) % 2;
     drawSprite(SPR[d.s].front[0], d.x * T - 1, d.y * T - 2 - bob, false);
   });
-  drawSprite(SPR.player.front[0], 7 * T + 7, 5 * T + 6, false);
+  // 噴水池的水花
+  const sp = Math.floor(frame / 10) % 3;
+  P(ctx, 7 * T + 15, 7 * T + 6 - sp, '#e6f6ff', 2, 2); P(ctx, 7 * T + 12 - sp, 7 * T + 9, '#e6f6ff', 1, 1); P(ctx, 7 * T + 19 + sp, 7 * T + 9, '#e6f6ff', 1, 1);
+  drawSprite(SPR.player.front[0], 7 * T - 1, 9 * T + 2, false);
   if (townSel >= 0){
     const z = ZONES[townSel], col = Math.floor(frame / 12) % 2 ? '#fcbc3c' : '#ffffff';
     const x = z.x0 * T, y = z.y0 * T, w = (z.x1 - z.x0 + 1) * T, h = (z.y1 - z.y0 + 1) * T;
@@ -1154,7 +1471,11 @@ function startLevel(i){
     <div class="intro-head"><canvas class="portrait" width="18" height="18"></canvas>
       <div><div class="eyebrow">${Z(LV_NO[i])} · ${Z(L.name)}</div><div class="say">${Z(L.giver.name)}</div></div></div>
     <div class="intro-lines">${L.intro.map(l => `<div>${Z(l[0])}<div class="han">${esc(l[1])}</div></div>`).join('')}</div>
-    ${L.type === 'shop'
+    ${L.type === 'fish'
+      ? `<div class="items"><span class="it"><span>🎣</span>${Z('ㄇㄞˋ ㄍㄟˇ', '賣給')} ${L.need} ${Z('ㄨㄟˋ ㄎㄜˋ ㄖㄣˊ', '位客人')}</span><span class="it"><span>🐟</span>🦀🦐🐙🐢</span></div>`
+      : L.type === 'feed'
+      ? `<div class="items">${L.npcs.map(n => `<span class="it"><span>${n.e}</span>${Z(n.name)}</span>`).join('')}</div>`
+      : L.type === 'shop'
       ? `<div class="items"><span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${L.need} ${Z('ㄊㄧˊ')}</span><span class="it"><span>👆</span>${Z('ㄉㄧㄢˇ ㄕㄤ ㄆㄧㄣˇ')}</span></div>`
       : `<div class="eyebrow">${Z('ㄧㄠˋ ㄓㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ')}</div>
     <div class="items">${L.npcs.map(n => `<span class="it"><span>${n.item.e}</span>${Z(n.item.z)}</span>`).join('')}</div>`}
@@ -1162,9 +1483,11 @@ function startLevel(i){
   </div>`, true);
   drawPortrait(L.giver.sprite);
   bindSpeak(text);
+  // 點開頭牌外面（暗色背景）就回到小鎮地圖
+  ov.onclick = e => { if (e.target === ov && state.mode === 'intro') showTitle(); };
   ov.querySelector('[data-primary]').onclick = () => {
     SFX.blip(); hideOv(); state.mode = 'play';
-    if (L.type === 'shop') setTimeout(() => { if (shop.phase === 'off' && state.mode === 'play') nextCustomer(); }, 400);
+    if (L.type === 'shop' || L.type === 'fish') setTimeout(() => { if (shop.phase === 'off' && state.mode === 'play') nextCustomer(); }, 400);
   };
 }
 
@@ -1174,6 +1497,7 @@ function bindSpeak(text){
 
 function openTalk(npc){
   state.mode = 'talk'; SFX.talk();
+  if (L.type === 'feed'){ feedTalk(npc); return; }
   if (npc.done){
     showOv(`<div class="panel"><div class="talk">
       <div class="who"><canvas class="portrait" width="18" height="18"></canvas><div class="nm">${Z(npc.name)}</div></div>
@@ -1265,7 +1589,8 @@ function levelClear(){
 /* ================= 移動 ================= */
 const DIRS = { u:[0,-1], d:[0,1], l:[-1,0], r:[1,0] };
 const SPEED = 2;
-function npcAt(x, y){ return npcs.find(n => n.x === x && n.y === y); }
+// 森林關：跟著走的、已經吃飽的動物不擋路
+function npcAt(x, y){ return npcs.find(n => n.x === x && n.y === y && !(L.type === 'feed' && (n.done || n.following))); }
 function tryMove(dir){
   const [dx, dy] = DIRS[dir]; player.face = dir;
   const nx = player.x + dx, ny = player.y + dy;
@@ -1275,19 +1600,135 @@ function tryMove(dir){
     if (bumpCool <= 0){ SFX.bump(); bumpCool = 18; }
     return;
   }
+  if (follower){ follower.tx = player.x; follower.ty = player.y; }
   Object.assign(player, { x:nx, y:ny, dx, dy, moving:true });
 }
 function update(){
   if (bumpCool > 0) bumpCool--;
   if (helpOpen) return;
   if (state.mode !== 'play') return;
-  if (L.type === 'shop'){ updateShop(); return; }
+  if (L.type === 'shop' || L.type === 'fish'){ updateShop(); if (L.type === 'fish') updateSea(); return; }
   const p = player;
   if (p.moving){
     p.px += p.dx * SPEED; p.py += p.dy * SPEED; p.step++;
-    if (p.px === p.x * T && p.py === p.y * T) p.moving = false;
+    if (p.px === p.x * T && p.py === p.y * T){
+      p.moving = false;
+      // 只在走到目的地（點的那一格）才檢查食物，路上經過的不算
+      if (L.type === 'feed' && (!walkPath || !walkPath.dirs.length)) feedArrive();
+    }
   }
+  if (follower){
+    const tx = follower.tx * T, ty = follower.ty * T;
+    follower.px += Math.sign(tx - follower.px) * Math.min(SPEED, Math.abs(tx - follower.px));
+    follower.py += Math.sign(ty - follower.py) * Math.min(SPEED, Math.abs(ty - follower.py));
+  }
+  if (state.mode !== 'play') return;
+  if (held.length) walkPath = null;
   if (!p.moving && held.length) tryMove(held[held.length - 1]);
+  else if (!p.moving && walkPath){
+    if (walkPath.dirs.length) tryMove(walkPath.dirs.shift());
+    else { const t = walkPath.talk; walkPath = null; if (t) tryMove(t); }
+  }
+}
+
+/* ---------- 森林：帶動物去找喜歡吃的東西 ---------- */
+let foods = [], follower = null;
+const FOODSPR = {};
+const foodSpr = e => FOODSPR[e] || (FOODSPR[e] = emojiSprite(e));
+const foodAt = (x, y) => foods.find(fd => !fd.eaten && fd.x === x && fd.y === y);
+function feedDialog(npc, lines, pic){
+  state.mode = 'talk';
+  showOv(`<div class="panel"><div class="talk">
+    <div class="who"><canvas class="portrait" width="18" height="18"></canvas><div class="nm">${Z(npc.name)}</div></div>
+    <div class="main"><div class="ask" style="border:0;background:none;padding:0">${pic ? `<div class="pic">${pic}</div>` : ''}
+      <div class="say">${lines.map(l => Z(l[0], l[1])).join('<br>')}</div></div>
+      <div class="row" style="justify-content:flex-start">${spkBtn()}<button class="btn" data-primary data-focus>${Z('ㄏㄠˇ')}</button></div></div>
+  </div></div>`);
+  drawPortrait(npc.sprite); bindSpeak(lines.map(l => l[1]).join(''));
+  return ov.querySelector('[data-primary]');
+}
+// 動物請你幫忙的五種說法，每次進森林隨機分給五隻動物（一隻一種）
+const FEED_TPL = [
+  [z => `ㄨㄛˇ ㄉㄨˋ ˙ㄗ ㄜˋ ˙ㄌㄜ，ㄑㄧㄥˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ㄓㄠˇ ${z}！`, h => `我肚子餓了，請帶我去找${h}！`],
+  [z => `ㄏㄠˇ ㄒㄧㄤˇ ㄔ ${z} ˙ㄛ！ㄋㄧˇ ㄎㄜˇ ㄧˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ˙ㄇㄚ？`, h => `好想吃${h}喔！你可以帶我去嗎？`],
+  [z => `${z} ㄎㄢˋ ㄑㄧˇ ㄌㄞˊ ㄏㄠˇ ㄏㄠˇ ㄔ！ㄑㄧㄥˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ㄓㄠˇ。`, h => `${h}看起來好好吃！請帶我去找。`],
+  [z => `ㄨㄛˇ ㄗㄨㄟˋ ㄞˋ ㄔ ${z} ˙ㄌㄜ，ㄋㄧˇ ㄓ ㄉㄠˋ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ ˙ㄇㄚ？`, h => `我最愛吃${h}了，你知道在哪裡嗎？`],
+  [z => `ㄍㄨ ㄌㄨ ㄍㄨ ㄌㄨ～ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${z}！`, h => `咕嚕咕嚕～我想吃${h}！`]];
+function feedTalk(npc){
+  const fd = L.foods[npc.wants];
+  if (npc.done){ feedDialog(npc, [['ㄏㄠˇ ㄏㄠˇ ㄔ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '好好吃！謝謝你！']]).onclick = closeTalk; return; }
+  if (follower === npc){ feedDialog(npc, [[`ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${fd.z}。`, `我想吃${fd.h}。`]]).onclick = closeTalk; return; }
+  if (follower){ feedDialog(npc, [['ㄋㄧˇ ㄒㄧㄢ ㄅㄤ ㄅㄤ ㄊㄚ ˙ㄅㄚ！', '你先幫幫他吧！']]).onclick = closeTalk; return; }
+  // 只說注音和國字，不給食物的圖，小孩要讀懂才知道找什麼
+  const tp = FEED_TPL[npc.tpl || 0];
+  feedDialog(npc, [[`ㄨㄛˇ ㄕˋ ${npc.name}。`, `我是${npc.han}。`], [tp[0](fd.z), tp[1](fd.h)]]).onclick = () => {
+    follower = npc; npc.following = true;
+    npc.px = npc.x * T; npc.py = npc.y * T; npc.tx = npc.x; npc.ty = npc.y;
+    SFX.blip(); closeTalk();
+  };
+}
+// 每次進森林：每隻動物從愛吃的清單挑一種（不重複），再加 3 種干擾食物；
+// 動物和食物隨機放在空地上，確認全部走得到、動物不擋路，而且動物離自己要的食物遠一點
+function setupFeed(){
+  const free = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++)
+    if (grid[y][x] === '.' && Math.abs(x - player.x) + Math.abs(y - player.y) > 2) free.push([x, y]);
+  const reachable = (animals) => {
+    const block = new Set(animals.map(p => p.join()));
+    const seen = new Set([player.x + ',' + player.y]), q = [[player.x, player.y]];
+    while (q.length){
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRS)){
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || seen.has(k) || block.has(k) || SOLID.has(grid[ny][nx])) continue;
+        seen.add(k); q.push([nx, ny]);
+      }
+    }
+    return seen;
+  };
+  for (let tries = 0; tries < 400; tries++){
+    const used = new Set(), wants = [];
+    for (const n of L.npcs){
+      const opts = shuffle(n.likes.filter(k => !used.has(k)));
+      if (!opts.length) break;
+      wants.push(opts[0]); used.add(opts[0]);
+    }
+    if (wants.length < L.npcs.length) continue;
+    const extra = shuffle(Object.keys(L.foods).filter(k => !used.has(k))).slice(0, 3);
+    const spots = shuffle(free.slice()), aSpots = spots.slice(0, L.npcs.length);
+    // 動物彼此至少隔 3 格，頭上的「!」才不會疊在一起
+    if (aSpots.some((p, i) => aSpots.some((q, j) => j > i && Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) < 3))) continue;
+    const keys = shuffle([...wants, ...extra]), fSpots = spots.slice(L.npcs.length, L.npcs.length + keys.length);
+    const seen = reachable(aSpots);
+    if (!fSpots.every(p => seen.has(p.join()))) continue;
+    if (!aSpots.every(([x, y]) => Object.values(DIRS).some(([dx, dy]) => seen.has((x + dx) + ',' + (y + dy))))) continue;
+    const far = wants.every((w, i) => { const fp = fSpots[keys.indexOf(w)], ap = aSpots[i]; return Math.abs(fp[0] - ap[0]) + Math.abs(fp[1] - ap[1]) >= 6; });
+    if (!far && tries < 300) continue;
+    const tpls = shuffle(FEED_TPL.map((_, i) => i));
+    npcs = L.npcs.map((n, i) => ({ ...n, idx:i, x:aSpots[i][0], y:aSpots[i][1], done: state.got.has(i), wants: wants[i], tpl: tpls[i % tpls.length] }));
+    foods = keys.map((k, i) => ({ id:k, x:fSpots[i][0], y:fSpots[i][1], ...L.foods[k], eaten:false }));
+    return;
+  }
+}
+
+// 主角每走完一格就檢查：腳下有食物、又有動物跟著，就看對不對
+function feedArrive(){
+  const fd = foodAt(player.x, player.y);
+  if (!fd || !follower) return;
+  const npc = follower, want = L.foods[npc.wants];
+  walkPath = null; held = [];
+  if (fd.id === npc.wants){
+    fd.eaten = true; npc.done = true; npc.following = false; follower = null;
+    npc.x = npc.tx; npc.y = npc.ty;
+    state.got.add(npc.idx); renderHud(npc.idx); SFX.ok(); setTimeout(SFX.item, 300);
+    feedDialog(npc, [['ㄏㄠˇ ㄏㄠˇ ㄔ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '好好吃！謝謝你！']], fd.e).onclick = () => {
+      closeTalk();
+      if (npcs.every(n => n.done)){ state.mode = 'busy'; setTimeout(levelClear, 400); }
+    };
+  } else {
+    state.mistakes++; SFX.no();
+    feedDialog(npc, [[`ㄅㄨˋ ㄕˋ ㄓㄜˋ ˙ㄍㄜ ˙ㄛ，ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${want.z}。`, `不是這個喔，我想吃${want.h}。`]]).onclick = closeTalk;
+  }
 }
 
 /* ================= 繪圖 ================= */
@@ -1298,6 +1739,7 @@ function drawSprite(c, x, y, flip){
 function draw(){
   frame++;
   if (state.mode === 'title'){ drawTown(); return; }
+  if (L.type === 'fish'){ drawSea(); return; }
   if (L.type === 'shop'){ drawShop(); return; }
   ctx.drawImage(bg, 0, 0);
   const th = THEMES[L.theme], s = Math.floor(frame / 30) % 2;
@@ -1312,10 +1754,13 @@ function draw(){
       if (grid[y][x] === ',' && grid[y - 1][x] === '~') P(ctx, x * T + ((x + s) % 2) * 4, y * T, '#ffffff', 8, 1);
     }
   }
-  const ents = npcs.map(n => ({ y:n.y * T, f:() => {
+  foods.forEach(fd => { if (!fd.eaten) drawSprite(foodSpr(fd.e), fd.x * T - 1, fd.y * T - 1 - (Math.floor((frame + fd.x * 9) / 40) % 2), false); });
+  const ents = npcs.map(n => ({ y: n.following ? n.py : n.y * T, f:() => {
     const bob = (Math.floor((frame + n.idx * 17) / 32) % 2);
-    drawSprite(SPR[n.sprite].front[0], n.x * T - 1, n.y * T - 2 - bob, false);
-    const bx = n.x * T + 4, by = n.y * T - 11 - bob;
+    const nx = n.following ? n.px : n.x * T, ny = n.following ? n.py : n.y * T;
+    drawSprite(SPR[n.sprite].front[n.following && (Math.floor(frame / 8) % 2) ? 1 : 0], nx - 1, ny - 2 - bob, false);
+    if (n.following) return;
+    const bx = nx + 4, by = ny - 11 - bob;
     if (!n.done){
       const j = Math.floor(frame / 20) % 2;
       P(ctx, bx, by - j, INK, 9, 10); P(ctx, bx + 1, by + 1 - j, '#ffffff', 7, 8);
@@ -1331,6 +1776,13 @@ function draw(){
     const set = player.face === 'u' ? SPR.player.back : SPR.player.front;
     drawSprite(set[fr], player.px - 1, player.py - 2, player.face === 'l');
   }});
+  if (walkPath && !npcAt(walkPath.tx, walkPath.ty)){
+    const x = walkPath.tx * T, y = walkPath.ty * T, c = Math.floor(frame / 8) % 2 ? '#fcbc3c' : '#ffffff';
+    [[0, 0], [12, 0], [0, 12], [12, 12]].forEach(([ox, oy]) => {
+      P(ctx, x + ox, y + oy + (oy ? 3 : 0), c, 4, 1);
+      P(ctx, x + ox + (ox ? 3 : 0), y + oy, c, 1, 4);
+    });
+  }
   ents.sort((a, b) => a.y - b.y).forEach(e => e.f());
 }
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
@@ -1345,7 +1797,7 @@ addEventListener('keydown', e => {
       e.preventDefault();
       const [dx, dy] = DIRS[dir];
       if (townSel < 0) selectZone(0);
-      else selectZone(((townSel % 2 + dx + 2) % 2) + ((Math.floor(townSel / 2) + dy + 2) % 2) * 2);
+      else selectZone((townSel + (dx + dy > 0 ? 1 : -1) + ZONES.length) % ZONES.length);
     } else if ((e.key === 'Enter' || e.key === ' ') && townSel >= 0 && !(document.activeElement && document.activeElement.dataset.zone)){ e.preventDefault(); enterZone(townSel); }
     return;
   }
@@ -1359,12 +1811,13 @@ addEventListener('keydown', e => {
     return;
   }
   if (ov.hidden) return;
-  if (/^[1-5]$/.test(e.key)){
+  if (/^[1-4]$/.test(e.key)){
     const b = ov.querySelectorAll('.opt')[+e.key - 1];
     if (b && !b.disabled){ e.preventDefault(); b.click(); }
     return;
   }
   if (e.key === 'Escape' && state.mode === 'talk' && ov.querySelector('[data-close]')){ closeTalk(); return; }
+  if (e.key === 'Escape' && state.mode === 'intro'){ showTitle(); return; }
   if (e.key.startsWith('Arrow')){
     const list = [...ov.querySelectorAll('button:not(:disabled)')].filter(b => !b.hasAttribute('data-close'));
     if (!list.length) return;
@@ -1385,22 +1838,44 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { const dir = KEYMAP[e.key]; if (dir) held = held.filter(d => d !== dir); });
 addEventListener('blur', () => { held = []; setPad(); });
 
-// 手機方向鍵
-const pad = $('pad');
-function setPad(){ pad.querySelectorAll('button').forEach(b => b.classList.toggle('on', held.includes(b.dataset.dir))); }
-pad.querySelectorAll('button').forEach(b => {
-  const dir = b.dataset.dir;
-  b.addEventListener('pointerdown', e => {
-    e.preventDefault(); audio();
-    if (state.mode !== 'play') return;
-    if (L.type === 'shop'){ moveCursor(dir); return; }
-    held = held.filter(d => d !== dir); held.push(dir); setPad();
-    try { b.setPointerCapture(e.pointerId); } catch (_) {}
-  });
-  const up = () => { held = held.filter(d => d !== dir); setPad(); };
-  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
-  b.addEventListener('contextmenu', e => e.preventDefault());
-});
+// 點地圖走路：點空地就走過去，點角色就走到旁邊並開始對話（鍵盤方向鍵照樣可以用）
+function setPad(){}
+let walkPath = null;
+function findPath(sx, sy, goals){
+  const key = (x, y) => x + ',' + y, prev = new Map([[key(sx, sy), null]]), q = [[sx, sy]];
+  while (q.length){
+    const [x, y] = q.shift();
+    if (goals.has(key(x, y))){
+      const dirs = []; let k = key(x, y);
+      while (prev.get(k)){ const [d, pk] = prev.get(k); dirs.unshift(d); k = pk; }
+      return dirs;
+    }
+    for (const [d, [dx, dy]] of Object.entries(DIRS)){
+      const nx = x + dx, ny = y + dy, nk = key(nx, ny);
+      if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || prev.has(nk) || SOLID.has(grid[ny][nx]) || npcAt(nx, ny)) continue;
+      prev.set(nk, [d, key(x, y)]); q.push([nx, ny]);
+    }
+  }
+  return null;
+}
+function tapWalk(t){
+  if (L.type === 'feed' && follower && follower.tx === t.x && follower.ty === t.y){ state.mode = 'talk'; feedTalk(follower); return; }
+  if (t.x < 0 || t.y < 0 || t.x >= COLS || t.y >= ROWS) return;
+  const n = npcAt(t.x, t.y), goals = new Set();
+  if (n) Object.values(DIRS).forEach(([dx, dy]) => goals.add((n.x + dx) + ',' + (n.y + dy)));
+  else goals.add(t.x + ',' + t.y);
+  const dirs = findPath(player.x, player.y, goals);
+  if (!dirs){ SFX.bump(); return; }
+  let talk = null;
+  if (n){
+    let x = player.x, y = player.y;
+    dirs.forEach(d => { x += DIRS[d][0]; y += DIRS[d][1]; });
+    talk = Object.keys(DIRS).find(d => x + DIRS[d][0] === n.x && y + DIRS[d][1] === n.y);
+  }
+  held = [];
+  walkPath = { dirs, talk, tx:t.x, ty:t.y };
+  SFX.blip();
+}
 
 // 超商：點畫面上的商品、或用方向鍵移動框框
 function moveCursor(dir){
@@ -1418,6 +1893,12 @@ function canvasCell(e){
 cv.addEventListener('pointerdown', e => {
   audio();
   if (state.mode === 'title'){ const t = canvasTile(e); enterZone(zoneAt(t.x, t.y)); return; }
+  if (state.mode === 'play' && L.type === 'fish'){
+    const r = cv.getBoundingClientRect();
+    seaTap((e.clientX - r.left) / r.width * 256, (e.clientY - r.top) / r.height * 192);
+    return;
+  }
+  if (state.mode === 'play' && L.type !== 'shop'){ tapWalk(canvasTile(e)); return; }
   if (L.type !== 'shop' || state.mode !== 'play') return;
   const i = canvasCell(e);
   if (i >= 0){ shop.cursor = i; pickItem(i); }
@@ -1428,6 +1909,7 @@ function canvasTile(e){
 }
 cv.addEventListener('pointerleave', () => { if (state.mode === 'title') selectZone(-1); });
 cv.addEventListener('pointermove', e => {
+  if (state.mode === 'play' && L.type !== 'shop'){ cv.style.cursor = 'pointer'; return; }
   if (state.mode === 'title'){
     if (e.pointerType !== 'mouse') return;
     const t = canvasTile(e), z = zoneAt(t.x, t.y);
@@ -1450,26 +1932,60 @@ try { showHz = localStorage.getItem('bpm-hz') !== '0'; } catch (e) {}
 function applyHan(){ document.body.classList.toggle('no-hz', !showHz); $('btnHan').setAttribute('aria-pressed', String(showHz)); }
 applyHan();
 $('btnHan').onclick = () => { showHz = !showHz; applyHan(); try { localStorage.setItem('bpm-hz', showHz ? '1' : '0'); } catch (e) {} };
+// 依視窗高度縮放遊戲畫面，讓電腦上不用上下捲動（手機、平板維持原樣）
+function fitStage(){
+  // 電腦版：遊戲區撐滿寬度、高度剛好塞進視窗；4:3 的像素地圖置中，兩側留深色邊，
+  // 對話框跟著遊戲區變寬，文字可以橫著排。手機、平板維持原本的 4:3 排法。
+  const wrap = document.querySelector('.wrap'), stage = $('stage'), town = $('town');
+  if (innerWidth <= 640){
+    stage.classList.remove('wide'); stage.style.height = ''; cv.style.width = ''; town.style.width = '';
+    return;
+  }
+  const cs = getComputedStyle(wrap), gap = parseFloat(cs.rowGap) || 12, root = getComputedStyle(document.documentElement);
+  let used = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(root.paddingTop) + parseFloat(root.paddingBottom);
+  [...wrap.children].forEach(el => {
+    if (el === stage || el.id === 'helpModal' || getComputedStyle(el).display === 'none') return;
+    used += el.offsetHeight + gap;
+  });
+  const innerW = wrap.clientWidth - 32 - 8;
+  const h = Math.max(270, Math.min(Math.floor(innerW * 3 / 4), innerHeight - used - 14 - 8));
+  stage.classList.add('wide');
+  stage.style.height = (h + 8) + 'px';
+  cv.style.width = town.style.width = Math.floor(h * 4 / 3) + 'px';
+}
+addEventListener('resize', fitStage);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitStage);
+
 // 遊戲說明視窗：點上方關卡名稱打開，內容依目前畫面而定
 let helpOpen = false;
 const HELP_KID = {
   map:[['🗺️','ㄒㄩㄢˇ ㄧ ˙ㄍㄜ ㄉㄧˋ ㄈㄤ ˙ㄅㄚ！','選一個地方吧！'],['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄣˋ ㄖㄨˋ','點一下進入']],
-  walk:[['<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>','ㄩㄥˋ ㄈㄤ ㄒㄧㄤˋ ㄐㄧㄢˋ ㄗㄡˇ ㄌㄨˋ','用方向鍵走路'],
-        ['❗','ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','碰到人就可以說話'],
-        ['<kbd>1</kbd>–<kbd>5</kbd>','ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ','選答案'],
+  walk:[['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄧˋ ㄊㄨˊ ㄐㄧㄡˋ ㄏㄨㄟˋ ㄗㄡˇ ㄌㄨˋ','點一下地圖就會走路'],
+        ['❗','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','點一下人就可以說話'],
+        ['✅','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄚˊ ㄢˋ','點一下答案'],
         ['🎁','ㄉㄚˊ ㄉㄨㄟˋ ㄐㄧㄡˋ ㄋㄚˊ ㄉㄠˋ ㄉㄨㄥ ˙ㄒㄧ','答對就拿到東西'],
         ['⭐','ㄙˋ ㄧㄤˋ ㄉㄨㄥ ˙ㄒㄧ ㄋㄚˊ ㄉㄠˋ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','四樣東西拿到就過關']],
+  feed:[['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄨㄥˋ ㄨˋ','點一下動物'],
+        ['📖','ㄎㄢˋ ㄊㄚ ㄒㄧㄤˇ ㄔ ㄕㄣˊ ˙ㄇㄜ','看他想吃什麼'],
+        ['🍯','ㄉㄞˋ ㄊㄚ ㄑㄩˋ ㄓㄠˇ ㄕˊ ㄨˋ','帶他去找食物'],
+        ['⭐','ㄅㄤ ㄙㄨㄛˇ ㄧㄡˇ ㄉㄨㄥˋ ㄨˋ ㄔ ㄅㄠˇ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','幫所有動物吃飽就過關']],
+  fish:[['🧑','ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄕㄨㄛ ㄧㄠˋ ㄇㄞˇ ㄕㄣˊ ˙ㄇㄜ。','客人會說要買什麼。'],
+        ['🎣','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄡˋ ㄏㄨㄟˋ ㄩㄥˋ ㄨㄤˇ ˙ㄗ ㄓㄨㄚ','點一下就會用網子抓'],
+        ['🔁','ㄓㄨㄚ ㄘㄨㄛˋ ˙ㄌㄜ ㄧㄠˋ ㄔㄨㄥˊ ㄓㄨㄚ','抓錯了要重抓'],
+        ['⭐','ㄇㄞˋ ㄍㄟˇ ㄌㄧㄡˋ ㄨㄟˋ ㄎㄜˋ ㄖㄣˊ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','賣給六位客人就過關']],
   shop:[['🧑','ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄨㄣˋ ㄋㄧˇ ㄉㄨㄥ ˙ㄒㄧ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ。','客人會問你東西在哪裡。'],
         ['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄨㄟˋ ˙ㄉㄜ ㄕㄤ ㄆㄧㄣˇ','點一下對的商品'],
         ['⭐','ㄉㄚˊ ㄉㄨㄟˋ ㄕˊ ㄊㄧˊ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','答對十題就過關']]};
 const HELP_PARENT = {
-  map:'主畫面是小鎮地圖：滑鼠移到農場、海邊、森林或便利商店會顯示簡介，點一下就進入關卡。鍵盤可用方向鍵選區域、按 Enter 進入；手機或平板直接點區域進入。',
-  walk:'用方向鍵（或 WASD、手機下方的方向鍵）走路，碰到頭上有「!」的角色就會出一題注音題，按數字 1–5 或直接點選項作答。答錯的選項會變灰，可以再選；答對就拿到一樣物資，四樣都拿到就過關。星星依答錯次數給：沒錯 3 顆、錯 1–2 次 2 顆、更多 1 顆。',
-  shop:'小孩當便利商店店員。客人用注音問商品在哪裡，直接在畫面上點商品，或用方向鍵移動框框、按 Enter 選。點錯會用注音告訴小孩點到的是什麼，可以再找。答對 10 題過關，星星依答錯次數給。'};
+  map:'主畫面是小鎮地圖：滑鼠移到農場、海邊、森林、超商或魚店會顯示簡介，點一下就進入關卡。鍵盤可用方向鍵選區域、按 Enter 進入；手機或平板直接點區域進入。',
+  walk:'直接點地圖上的位置，主角會自己走過去；點頭上有「!」的角色，主角會走到旁邊並出一題注音題，直接點選項作答。電腦也可以用方向鍵（或 WASD）走路、按數字 1–4 作答。答錯的選項會變灰，可以再選；答對就拿到一樣物資，四樣都拿到就過關。星星依答錯次數給：沒錯 3 顆、錯 1–2 次 2 顆、更多 1 顆。',
+  feed:'森林裡有 5 隻動物，地上散著 8 種食物（其中 3 種是沒有動物要吃的干擾項）。每次進來，動物想吃的東西和動物、食物的位置都會重新安排。點一下動物，主角會走過去，動物用注音說想吃什麼（只有文字，沒有食物的圖）。按「好」之後動物會跟在主角後面；再點地圖上的食物，主角會帶牠走過去。找對了動物會說「好好吃！謝謝你！」並留在那裡；找錯會說「不是這個喔」，可以再找。一次只能帶一隻。5 隻都吃飽就過關，星星依找錯次數給。',
+  fish:'小孩當魚店老闆。客人用注音說要幾隻什麼（紅、黃、藍、綠、紫色的魚，或螃蟹、蝦子、章魚、烏龜，有時是兩種的組合），點魚缸裡游動的動物，魚網就會撈過去。抓對的放進水桶；抓錯會用注音說這是什麼並放回去重抓；點到沒東西的地方不算錯。賣給 6 位客人過關，星星依抓錯次數給。',
+  shop:'小孩當超商店員。客人用注音問商品在哪裡，直接在畫面上點商品（電腦也可以用方向鍵移動框框、按 Enter 選）。點錯會用注音告訴小孩點到的是什麼，可以再找。答對 10 題過關，星星依答錯次數給。'};
 const HELP_COMMON = '上方按鈕：「國字」關掉可只看注音（故意寫錯音的辨音題選項本來就只有注音）；「👂 聽」開啟後，題目旁才會出現「🔊聽」按鈕，可用瀏覽器朗讀；「音效」開關遊戲音效；「選關」回到小鎮地圖。星星進度只存在這台裝置的瀏覽器裡。';
 function openHelp(){
-  const k = state.mode === 'title' ? 'map' : L.type === 'shop' ? 'shop' : 'walk';
-  const name = k === 'map' ? Z('ㄒㄧㄠˇ ㄓㄣˋ') : Z(L.name);
+  const k = state.mode === 'title' ? 'map' : L.type === 'shop' ? 'shop' : L.type === 'fish' ? 'fish' : L.type === 'feed' ? 'feed' : 'walk';
+  const name = k === 'map' ? Z('ㄉㄧˋ ㄊㄨˊ', '地圖') : Z(L.name);
   helpOpen = true; held = []; setPad();
   const body = $('helpBody');
   body.innerHTML = `<div class="help-title">📖 ${Z('ㄧㄡˊ ㄒㄧˋ ㄕㄨㄛ ㄇㄧㄥˊ', '遊戲說明')}<span class="eyebrow">· ${name}</span></div>
@@ -1501,7 +2017,24 @@ $('btnSnd').onclick = () => {
   if (!muted) SFX.blip();
 };
 $('btnMenu').onclick = () => { if (canSpeak) speechSynthesis.cancel(); showTitle(); };
-addEventListener('pointerdown', () => audio(), { once:true });
+// 手機（特別是 iPhone）要在使用者點擊的當下才能開啟聲音：
+// 每次點擊都試著開啟，直到真的成功；並播一段無聲的音，讓 iOS 正式打開音效。
+// navigator.audioSession 是 iOS 17 以上的 Safari 才有，設成 playback 時開著靜音也能出聲。
+let audioUnlocked = false;
+function unlockAudio(){
+  if (audioUnlocked && AC && AC.state === 'running') return;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  const a = audio(); if (!a) return;
+  try {
+    const src = a.createBufferSource();
+    src.buffer = a.createBuffer(1, 1, 22050);
+    src.connect(a.destination); src.start(0);
+  } catch (e) {}
+  const p = a.resume && a.resume();
+  if (p && p.then) p.then(() => { audioUnlocked = a.state === 'running'; }).catch(() => {});
+  else audioUnlocked = a.state === 'running';
+}
+['touchstart', 'touchend', 'pointerdown', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlockAudio, { passive:true, capture:true }));
 if (canSpeak) try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {}
 
 /* ================= 開始 ================= */
@@ -1509,7 +2042,7 @@ const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) try { hot.snapshot(() => ({ lv:state.lv, got:[...state.got], mode:state.mode })); } catch (e) {}
 function start(data){
   if (data && typeof data.lv === 'number' && (data.mode === 'play' || data.mode === 'talk') && LEVELS[data.lv]){
-    if (LEVELS[data.lv].type === 'shop') startLevel(data.lv);
+    if (LEVELS[data.lv].type) startLevel(data.lv);
     else { loadLevel(data.lv, data.got); state.mode = 'play'; }
   } else showTitle();
   loop();
