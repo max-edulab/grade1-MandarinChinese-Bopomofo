@@ -91,6 +91,28 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
 .pu{display:inline-block;vertical-align:middle;margin-inline:.05em}
 .shopbar{display:flex;align-items:center;gap:12px;background:var(--paper);border:4px solid var(--ink);padding:8px 12px;min-height:96px}
 .shopbar .main{gap:2px}
+/* 超商客人頭上的對話泡泡（答對綠、答錯紅） */
+.bubble{position:absolute;z-index:5;transform:translate(-50%,calc(-100% - 10px));max-width:min(86%,420px);width:max-content;
+  background:#fff;color:var(--ink);border:3px solid var(--ink);padding:6px 12px;font-weight:700;font-size:clamp(15px,1.9vw,22px);line-height:1.3;
+  box-shadow:3px 3px 0 rgba(0,0,0,.25);pointer-events:none}
+.bubble.ok{background:#dff8d0}
+.bubble.no{background:#ffe2dc}
+.bubble::after{content:"";position:absolute;left:var(--tail,50%);bottom:-11px;width:14px;height:11px;transform:translateX(-50%);
+  background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%)}
+/* 放在客人右邊的泡泡：尖角朝左指著客人 */
+.bubble.side{transform:translate(12px,-50%)}
+@media (max-width:640px){ .bubble{font-size:13px;padding:4px 8px} }
+.bubble.side::after{left:-11px;top:50%;bottom:auto;width:11px;height:14px;transform:translateY(-50%);clip-path:polygon(100% 0,100% 100%,0 50%)}
+/* 超商：對話列固定兩行字高；客人進門時顯示自動門打開的動畫 */
+.shopbar.fixed2{--say-fs:clamp(22px,3.2vw,30px);height:calc(var(--say-fs) * 3.9 + 24px);min-height:0}
+.shopbar.fixed2 .main{height:100%;overflow:auto;justify-content:center}
+.shopbar.fixed2 .say{font-size:var(--say-fs)}
+@media (max-width:640px){
+  .shopbar.fixed2{--say-fs:17px;gap:8px;padding:6px 8px}
+  .shopbar .portrait{width:40px;height:40px}
+  .shopbar .spk{font-size:13px;padding:4px 6px}
+}
+.shopbar .door{display:block;height:calc(var(--say-fs, 26px) * 3.6);width:auto;max-width:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 .shopbar .fb{font-size:17px}
 .pips{display:flex;gap:3px;flex-wrap:wrap}
 .pips i{width:12px;height:12px;background:#34365e;border:2px solid #6a6ea8}
@@ -234,12 +256,13 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
 
   <div class="shopbar" id="shopbar" hidden aria-live="polite">
     <canvas class="portrait" id="custPortrait" width="18" height="18"></canvas>
-    <div class="main"><div class="say" id="sbSay"></div><div class="han" id="sbHan"></div><div class="fb" id="sbFb"></div></div>
+    <div class="main"><canvas class="door" id="sbDoor" width="64" height="32" hidden aria-label="自動門打開"></canvas><div class="say" id="sbSay"></div><div class="han" id="sbHan"></div><div class="fb" id="sbFb"></div></div>
     <button class="spk" id="sbSpk">🔊 <span data-zy="ㄊㄧㄥ"></span></button>
   </div>
 
   <div class="stage" id="stage">
     <canvas id="game" width="256" height="192" aria-label="遊戲地圖"></canvas>
+    <div class="bubble" id="custBubble" hidden aria-live="polite"></div>
     <div class="town" id="town" hidden></div>
     <div class="ov" id="ov" hidden></div>
   </div>
@@ -284,9 +307,8 @@ const LEVELS = [
      qs:[
       {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🥚', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
        opts:[['ㄐㄧ ㄉㄢˋ'],['ㄐㄧ ㄊㄢˋ'],['ㄑㄧ ㄉㄢˋ'],['ㄐㄧ ㄉㄤˋ']]},
-      {say:['ㄇㄨˇ ㄐㄧ ㄒㄧㄚˋ ˙ㄌㄜ ㄙㄢ ˙ㄍㄜ ㄉㄢˋ。','母雞下了三個蛋。'],
-       q:['ㄇㄨˇ ㄐㄧ ㄒㄧㄚˋ ˙ㄌㄜ ㄐㄧˇ ˙ㄍㄜ ㄉㄢˋ？','母雞下了幾個蛋？'],
-       opts:[['ㄙㄢ ˙ㄍㄜ','🥚🥚🥚','三個'],['ㄧ ˙ㄍㄜ','🥚','一個'],['ㄌㄧㄤˇ ˙ㄍㄜ','🥚🥚','兩個'],['ㄙˋ ˙ㄍㄜ','🥚🥚🥚🥚','四個']]}]},
+      {q:['ㄇㄨˇ ㄐㄧ ㄒㄧㄚˋ ˙ㄌㄜ ㄐㄧˇ ˙ㄍㄜ ㄉㄢˋ？','母雞下了幾個蛋？'], pic:'🥚🥚🥚',
+       opts:[['ㄙㄢ ˙ㄍㄜ','','三個'],['ㄧ ˙ㄍㄜ','','一個'],['ㄌㄧㄤˇ ˙ㄍㄜ','','兩個'],['ㄙˋ ˙ㄍㄜ','','四個']]}]},
     {key:'b', name:'ㄋㄨㄥˊ ㄈㄨ ㄅㄛˊ ˙ㄅㄛ', han:'農夫伯伯', sprite:'farmer',
      item:{e:'🌾', z:'ㄇㄧㄢˋ ㄈㄣˇ', h:'麵粉'},
      hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄗㄞˋ ㄓㄨㄥˋ ㄘㄞˋ。','你好！我在種菜。'],
@@ -342,7 +364,7 @@ const LEVELS = [
      hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄕˋ ㄆㄤˊ ㄒㄧㄝˋ。','你好！我是螃蟹。'],
      qs:[
       {q:['ㄆㄤˊ ㄒㄧㄝˋ ㄗㄣˇ ˙ㄇㄜ ㄧˊ ㄉㄨㄥˋ？','螃蟹怎麼移動？'],
-       opts:[['ㄏㄥˊ ˙ㄓㄜ ㄗㄡˇ','↔️','橫著走'],['ㄓˊ ˙ㄓㄜ ㄗㄡˇ','↕️','直著走'],['ㄉㄠˋ ˙ㄓㄜ ㄗㄡˇ','🔙','倒著走'],['ㄩㄥˋ ㄈㄟ ˙ㄉㄜ','🕊️','用飛的']]},
+       opts:[['ㄏㄥˊ ˙ㄓㄜ ㄗㄡˇ','','橫著走'],['ㄓˊ ˙ㄓㄜ ㄗㄡˇ','','直著走'],['ㄉㄠˋ ˙ㄓㄜ ㄗㄡˇ','','倒著走'],['ㄩㄥˋ ㄈㄟ ˙ㄉㄜ','','用飛的']]},
       {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🐚', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
        opts:[['ㄅㄟˋ ㄎㄜˊ'],['ㄆㄟˋ ㄎㄜˊ'],['ㄅㄟˋ ㄍㄜˊ'],['ㄅㄞˋ ㄎㄜˊ']]}]},
     {key:'b', name:'ㄩˊ ㄈㄨ', han:'漁夫', sprite:'fisher',
@@ -445,10 +467,10 @@ const SHOP_ITEMS = [
   ['🍬','ㄊㄤˊ ㄍㄨㄛˇ','糖果'],['🍫','ㄑㄧㄠˇ ㄎㄜˋ ㄌㄧˋ','巧克力'],['🍪','ㄅㄧㄥˇ ㄍㄢ','餅乾'],['🪥','ㄧㄚˊ ㄕㄨㄚ','牙刷'],
   ['🧻','ㄨㄟˋ ㄕㄥ ㄓˇ','衛生紙'],['☂️','ㄩˇ ㄙㄢˇ','雨傘'],['🔋','ㄉㄧㄢˋ ㄔˊ','電池']];
 const ASK_TPL = [
-  [z => `ㄑㄧㄥˇ ㄨㄣˋ，${z} ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ？`, h => `請問，${h}在哪裡？`],
+  [z => `${z} ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ？`,               h => `${h}在哪裡？`],
   [z => `ㄨㄛˇ ㄒㄧㄤˇ ㄇㄞˇ ${z}。`,              h => `我想買${h}。`],
-  [z => `ㄋㄧˇ ㄏㄠˇ，ㄧㄡˇ ㄇㄟˊ ㄧㄡˇ ${z}？`,    h => `你好，有沒有${h}？`],
-  [z => `ㄨㄛˇ ㄧㄠˋ ㄇㄞˇ ${z}，ㄒㄧㄝˋ ˙ㄒㄧㄝ！`, h => `我要買${h}，謝謝！`]];
+  [z => `ㄧㄡˇ ㄇㄟˊ ㄧㄡˇ ${z}？`,              h => `有沒有${h}？`],
+  [z => `ㄨㄛˇ ㄧㄠˋ ㄇㄞˇ ${z}！`,              h => `我要買${h}！`]];
 const CUSTOMERS = ['mom','bro','dad','grandpa','auntie','student','farmer','fisher'];
 
 /* ================= 像素畫 ================= */
@@ -765,6 +787,8 @@ function renderShopBg(){
 const shop = { queue:[], correct:0, target:-1, phase:'off', x:236, sprite:'mom', tpl:0, timer:0, carry:-1, marks:[], cursor:0, showCursor:false, last:'' };
 const sbar = () => document.getElementById('shopbar');
 function setBar(sayZ, sayH, fb){
+  // 超商客人還沒開口時，用自動門動畫代替文字
+  document.getElementById('sbDoor').hidden = !(L.type === 'shop' && !sayZ);
   document.getElementById('sbSay').innerHTML = sayZ ? Z(sayZ, sayH) : '';
   document.getElementById('sbHan').textContent = sayH || '';
   document.getElementById('sbFb').innerHTML = fb || '';
@@ -783,6 +807,7 @@ function setupShop(){
   Object.assign(shop, { correct:0, phase:'off', marks:[], carry:-1, cursor:0, showCursor:false, last:'' });
 }
 function nextCustomer(){
+  hideBubble();
   const pool = CUSTOMERS.filter(s => s !== shop.last);
   shop.sprite = pool[Math.floor(Math.random() * pool.length)]; shop.last = shop.sprite;
   shop.target = shop.queue[shop.correct];
@@ -790,7 +815,9 @@ function nextCustomer(){
   if (L.type === 'fish'){ shop.tpl = Math.floor(Math.random() * SEA_TPL.length); sea.bucket = []; stockFor(shop.target); }
   Object.assign(shop, { x:236, phase:'enter', carry:-1 });
   beep(1319, .12, 'square', .04); beep(1047, .2, 'square', .04, .14); // 自動門叮咚
-  setBar('ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！', '歡迎光臨！');
+  // 超商客人進來時不顯示「歡迎光臨」，等客人開口再顯示
+  if (L.type === 'shop') setBar('', '');
+  else setBar('ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！', '歡迎光臨！');
 }
 function askNow(){
   if (L.type === 'fish'){ askSea(); return; }
@@ -805,14 +832,42 @@ function pickItem(i){
     shop.correct++; SFX.ok(); setTimeout(SFX.item, 320);
     shop.marks.push({ i, ok:true, t:50 });
     shop.carry = i; shop.phase = 'thanks'; shop.timer = 50;
-    setBar('ㄉㄨㄟˋ ˙ㄌㄜ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '對了！謝謝你！',
-      `<span style="color:var(--leaf)">${it[0]} ${Z(it[1])}</span>`);
+    sayBubble('ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '謝謝你！', 'ok side', 1800);
     renderHud(true);
   } else {
     state.mistakes++; SFX.no();
     shop.marks.push({ i, ok:false, t:45 });
-    document.getElementById('sbFb').innerHTML = `${it[0]} ${Z('ㄓㄜˋ ㄕˋ ' + it[1] + '，ㄗㄞˋ ㄓㄠˇ ㄓㄠˇ ㄎㄢˋ！', '這是' + it[2] + '，再找找看！')}`;
+    sayBubble('ㄓㄜˋ ㄕˋ ' + it[1] + ' ˙ㄛ！', '這是' + it[2] + '喔！', 'no side', 4000);
   }
+}
+// 超商：答對、答錯用客人頭上的對話泡泡表示（位置跟著客人，見 placeBubble）
+let bubbleTimer = 0;
+function sayBubble(z, h, kind, ms){
+  const b = document.getElementById('custBubble');
+  b.innerHTML = Z(z, h); b.className = 'bubble ' + kind; b.hidden = false;
+  placeBubble();
+  clearTimeout(bubbleTimer);
+  if (ms) bubbleTimer = setTimeout(hideBubble, ms);   // ms = 0：一直顯示，等下一次更新
+}
+function hideBubble(){ clearTimeout(bubbleTimer); const b = document.getElementById('custBubble'); if (b) b.hidden = true; }
+function placeBubble(){
+  const b = document.getElementById('custBubble'); if (!b || b.hidden) return;
+  const r = cv.getBoundingClientRect(), sr = document.getElementById('stage').getBoundingClientRect();
+  if (b.classList.contains('side')){
+    // 超商：泡泡放在客人右手邊的地板區，不擋上方貨架
+    const x = r.left - sr.left + (shop.x + 20) / 256 * r.width, y = r.top - sr.top + 158 / 192 * r.height;
+    // 可以延伸到遊戲區兩側的深色邊（電腦版），高度太高就往上移，不超出遊戲區底部
+    b.style.maxWidth = Math.max(110, Math.min(440, sr.width - x - 24)) + 'px';
+    b.style.left = x + 'px';
+    const bottom = r.bottom - sr.top - 6, half = b.offsetHeight / 2;
+    b.style.top = Math.min(y, bottom - half) + 'px';
+    return;
+  }
+  const x = r.left - sr.left + (shop.x + 9) / 256 * r.width, y = r.top - sr.top + 134 / 192 * r.height;
+  const half = b.offsetWidth / 2, maxX = sr.width - half - 8;
+  b.style.left = Math.max(half + 8, Math.min(maxX, x)) + 'px';
+  b.style.top = y + 'px';
+  b.style.setProperty('--tail', (x - Math.max(half + 8, Math.min(maxX, x)) + half) + 'px');
 }
 function updateShop(){
   shop.marks.forEach(m => m.t--); shop.marks = shop.marks.filter(m => m.t > 0);
@@ -826,7 +881,28 @@ function updateShop(){
   }
 }
 const GLYPH_Q = ['.###.','#...#','...#.','..#..','.....','..#..'];
+// 對話列裡的超商自動門：p = 0 關著，1 全開
+function drawDoor(p){
+  const c = document.getElementById('sbDoor'); if (!c || c.hidden) return;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const off = Math.round(p * 18);
+  P(g, 0, 0, '#f6eedc', 64, 32);
+  P(g, 0, 0, '#ff8c1a', 64, 2); P(g, 0, 2, '#2c9c4c', 64, 2); P(g, 0, 4, '#e83c3c', 64, 2);
+  P(g, 12, 8, INK, 40, 24); P(g, 13, 9, '#fff4c8', 38, 23);           // 門裡面亮亮的店內
+  for (let k = 0; k < 3; k++) P(g, 15, 13 + k * 6, '#d8b878', 34, 1);  // 貨架
+  [[13 - off, 0], [32 + off, 1]].forEach(([x, side]) => {             // 兩片玻璃門往左右滑開
+    P(g, x, 9, INK, 19, 23); P(g, x + 1, 10, '#bfe3f5', 17, 22);
+    for (let k = 0; k < 5; k++) P(g, x + 4 + k, 13 + k, '#e6f6ff');
+    P(g, side ? x + 2 : x + 15, 20, INK, 2, 3);                       // 門把
+  });
+  P(g, 0, 8, '#f6eedc', 12, 24); P(g, 52, 8, '#f6eedc', 12, 24);       // 蓋住滑出門框的部分
+  P(g, 11, 7, INK, 42, 2); P(g, 11, 7, INK, 2, 25); P(g, 51, 7, INK, 2, 25);
+  P(g, 30, 7, Math.floor(frame / 10) % 2 ? '#3cdc78' : '#1c8c48', 4, 2); // 感應燈
+  P(g, 8, 30, '#2c9c4c', 48, 2);                                       // 門口地墊
+}
 function drawShop(){
+  if (shop.phase === 'enter') drawDoor(Math.min(1, (236 - shop.x) / 30));
+  placeBubble();
   ctx.drawImage(bg, 0, 0);
   const blink = Math.floor(frame / 16) % 2;
   if (shop.showCursor && state.mode === 'play'){
@@ -987,13 +1063,17 @@ function netTo(n, tx, ty, frames){
 function netPhase(n, phase){ n.phase = phase; n.t = 0; n.fx = n.x; n.fy = n.y; }
 function judgeNet(){
   const n = sea.net, c = n.c, fb = document.getElementById('sbFb');
-  if (!c){ netPhase(n, 'miss'); fb.innerHTML = Z('ㄇㄟˊ ㄓㄨㄚ ㄉㄠˋ，ㄗㄞˋ ㄕˋ ㄧ ㄘˋ！', '沒抓到，再試一次！') + seaProgress(); return; }
+  // 失敗的提示用客人頭上的對話泡泡表示（跟超商一樣）
+  // 魚店的錯誤提示不會自己消失：等抓對或下一次錯誤才更新
+  if (!c){ netPhase(n, 'miss'); sayBubble('ㄇㄟˊ ㄓㄨㄚ ㄉㄠˋ，ㄗㄞˋ ㄕˋ ㄧ ㄘˋ！', '沒抓到，再試一次！', 'no side', 0); return; }
   const line = shop.target.find(l => l.got < l.n && matches(c, l));
-  if (line){ line.got++; SFX.ok(); netPhase(n, 'bucket'); }
+  if (line){ line.got++; SFX.ok(); netPhase(n, 'bucket'); hideBubble(); }
   else {
     state.mistakes++; SFX.no(); netPhase(n, 'drop');
     const nm = seaName(c.kind, c.ci);
-    fb.innerHTML = Z(`ㄓㄜˋ ㄕˋ ${nm[0]}，ㄧㄠˋ ㄔㄨㄥˊ ㄓㄨㄚ ˙ㄛ！`, `這是${nm[1]}，要重抓喔！`) + seaProgress();
+    // 客人有要這種、只是已經抓夠了 → 提示「已經滿了」；完全不是客人要的 → 提示「要重抓」
+    if (shop.target.some(l => matches(c, l))) sayBubble(`${nm[0]} ㄧˇ ㄐㄧㄥ ㄇㄢˇ ˙ㄌㄜ！`, `${nm[1]}已經滿了！`, 'no side', 0);
+    else sayBubble(`ㄓㄜˋ ㄕˋ ${nm[0]}，ㄧㄠˋ ㄔㄨㄥˊ ㄓㄨㄚ ˙ㄛ！`, `這是${nm[1]}，要重抓喔！`, 'no side', 0);
   }
 }
 function finishCatch(){
@@ -1083,6 +1163,7 @@ function drawNet(x, y){
   }
 }
 function drawSea(){
+  placeBubble();
   ctx.drawImage(bg, 0, 0);
   const blink = Math.floor(frame / 16) % 2;
   for (let k = 0; k < 7; k++){
@@ -1101,6 +1182,9 @@ function drawSea(){
   }
   drawSprite(SPR.player.front[0], 55, 146, false);
   ctx.drawImage(seaCounter, 0, 0);
+  // 抓到的水產排在櫃檯正面
+  if (shop.phase === 'ask' || shop.phase === 'thanks')
+    sea.bucket.forEach((c, k) => drawSprite(seaSprite(c), 12 + k * 19, 171, c.kind !== 'crab' && c.kind !== 'octopus' && k % 2 === 1));
   // 水桶
   const bx = BUCKET.x, by = BUCKET.y;
   P(ctx, bx - 9, by - 6, INK, 18, 16); P(ctx, bx - 8, by - 5, '#a8b4c4', 16, 14); P(ctx, bx - 8, by - 5, '#5cb4fc', 16, 4);
@@ -1114,9 +1198,6 @@ function drawSea(){
       const qx = cx + 4, qy = 136 - blink;
       P(ctx, qx, qy, INK, 9, 10); P(ctx, qx + 1, qy + 1, '#ffffff', 7, 8);
       GLYPH_Q.forEach((row, yy) => [...row].forEach((ch, xx) => { if (ch === '#') P(ctx, qx + 2 + xx, qy + 2 + yy, '#2c64f0'); }));
-    }
-    if (shop.phase === 'ask' || shop.phase === 'thanks'){ // 抓到的水產排在客人右手邊
-      sea.bucket.forEach((c, k) => drawSprite(seaSprite(c), cx + 20 + k * 19, 156 - (k % 2) * 2, false));
     }
     if (shop.carry === 99 && shop.phase === 'leave'){ // 裝魚的袋子
       P(ctx, cx + 3, 128 - blink, INK, 12, 14); P(ctx, cx + 4, 129 - blink, '#eef6ff', 10, 12); P(ctx, cx + 4, 134 - blink, '#5cb4fc', 10, 7);
@@ -1238,6 +1319,9 @@ function loadLevel(i, got){
   $('town').hidden = true;
   const store = L.type === 'shop' || L.type === 'fish';
   sbar().hidden = !store;
+  sbar().classList.toggle('fixed2', L.type === 'shop');
+  hideBubble();
+  document.getElementById('sbDoor').hidden = true;
   if (store){ grid = []; npcs = []; bg = L.type === 'fish' ? renderFishBg() : renderShopBg(); setupShop(); renderHud(); return; }
   grid = L.map.map(r => r.padEnd(COLS, '.').slice(0, COLS).split(''));
   npcs = []; foods = []; follower = null;
@@ -1392,6 +1476,7 @@ function renderTownBg(){
 }
 
 function showTitle(){
+  hideBubble();
   if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
   hideOv();
   state.mode = 'title';
