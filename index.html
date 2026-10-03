@@ -1,0 +1,1284 @@
+<meta charset="utf-8">
+<title>ㄅㄆㄇ 小冒險</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: one centered arcade cabinet — title bar, inventory HUD, 4:3 pixel stage, touch pad below. Single sky-blue look on purpose. */
+  --sky:#5c94fc;
+  --ink:#1b1b2f;
+  --paper:#fffbe8;
+  --brick:#c84c0c;
+  --gold:#fcbc3c;
+  --leaf:#3c9c28;
+  --night:#23244a;
+  --muted:#6a6a80;
+  --hz:#4a4b5c;
+  --f-zy:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --f-px:"Press Start 2P",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
+  background-image:
+    linear-gradient(var(--sky),var(--sky));
+}
+.wrap{max-width:800px;margin:0 auto;padding-inline:16px;padding-block:14px 28px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.logo{margin:0;font-weight:900;font-size:clamp(22px,4.4vw,34px);color:#fff;letter-spacing:.02em;
+  text-shadow:3px 0 0 var(--ink),-3px 0 0 var(--ink),0 3px 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),6px 6px 0 rgba(0,0,0,.25)}
+.logo .b{color:var(--gold)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--f-zy);font-weight:700;font-size:15px;color:var(--ink);background:var(--paper);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:5px 10px;cursor:pointer;line-height:1.3}
+.chip:active{transform:translateY(3px);box-shadow:none}
+.chip[aria-pressed="true"]{background:var(--gold)}
+.chip:focus-visible,.btn:focus-visible,.lvcard:focus-visible,.spk:focus-visible,.x:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+
+.hud{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--night);color:#fff;border:4px solid var(--ink);padding:8px 12px;min-height:56px}
+.lvname{font-weight:900;font-size:18px;display:flex;align-items:center;gap:8px}
+.lvname .tag{font-family:var(--f-px);font-size:10px;background:var(--brick);padding:5px 6px;border:2px solid #fff}
+.slots{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.slot{display:flex;align-items:center;gap:6px;background:#34365e;border:2px solid #6a6ea8;padding:3px 8px;font-size:14px;font-weight:700}
+.slot .ic{font-size:22px;filter:grayscale(1) opacity(.35)}
+.slot .nm{opacity:.55}
+.slot.got{background:#2f7a1e;border-color:var(--gold)}
+.slot.got .ic{filter:none}
+.slot.got .nm{opacity:1}
+.slot.pop{animation:pop .5s steps(4)}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+.stage{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border:4px solid var(--ink);background:#000;box-shadow:8px 8px 0 rgba(0,0,0,.25)}
+#game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+
+.ov{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:10px;overflow:auto}
+.ov.center{align-items:center;background:rgba(18,20,60,.55)}
+.panel{position:relative;width:100%;max-width:720px;max-height:100%;overflow:auto;background:var(--paper);border:4px solid var(--ink);
+  box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 6px var(--gold),6px 6px 0 rgba(0,0,0,.35);padding:16px 18px}
+[hidden]{display:none!important}
+/* 直式注音 */
+.sy{display:inline-flex;align-items:flex-end;vertical-align:middle;margin:.1em .1em;line-height:1}
+.sy .col{display:inline-flex;flex-direction:column;align-items:center}
+.sy b{display:block;font-weight:inherit;font-size:.62em;line-height:1.04}
+.sy .dot{display:block;font-style:normal;font-size:.55em;line-height:.55}
+.ru .sy .dot{font-size:.7em}
+.sy .tn{display:block;font-size:.55em;width:.45em;margin-bottom:.26em;line-height:1}
+.ru .sy .tn{font-size:.72em;width:.5em;margin-bottom:.32em}
+.pu{display:inline-block;vertical-align:middle;margin-inline:.05em}
+.shopbar{display:flex;align-items:center;gap:12px;background:var(--paper);border:4px solid var(--ink);padding:8px 12px;min-height:96px}
+.shopbar .main{gap:2px}
+.shopbar .fb{font-size:17px}
+.pips{display:flex;gap:3px;flex-wrap:wrap}
+.pips i{width:12px;height:12px;background:#34365e;border:2px solid #6a6ea8}
+.pips i.on{background:var(--gold);border-color:#fff}
+.han{display:none}
+/* 國字＋注音 */
+.ru{display:inline-flex;align-items:center;vertical-align:middle;margin:.06em .04em}
+.ru .hz{display:block;font-size:1.55em;line-height:1.1;color:var(--hz)}
+.ru .sy{font-size:.44em;margin:0 0 0 .14em}
+.ru .sy b{font-size:1em;line-height:1.08}
+/* 有底色或特別顏色的地方，國字跟著原本的文字顏色 */
+.btn:not(.alt) .hz,.hud .hz,.q .hz,.headline .hz,.fb .hz,.title-logo .hz,b .hz,[style] .hz{color:inherit}
+body.no-hz .ru .hz{display:none}
+body.no-hz .ru .sy{font-size:1em}
+body.no-hz .ru .sy b{font-size:.8em}
+
+.talk{display:grid;grid-template-columns:88px minmax(0,1fr);gap:12px 16px}
+.who{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.portrait{width:72px;height:72px;image-rendering:pixelated;background:#cfe6ff;border:3px solid var(--ink)}
+.who .nm{font-weight:900;font-size:15px;line-height:1.3}
+.main{min-width:0;display:flex;flex-direction:column;gap:10px}
+.say{font-size:clamp(22px,3.2vw,30px);font-weight:700;line-height:1.55}
+.ask{display:flex;align-items:center;gap:12px;background:#fff;border:3px dashed var(--ink);padding:8px 12px}
+.ask .qwrap{min-width:0;flex:1}
+.pic{font-size:52px;line-height:1}
+.q{font-size:clamp(22px,3.2vw,30px);font-weight:900;color:var(--brick);line-height:1.5}
+.spk{flex:none;font-family:var(--f-zy);font-weight:700;font-size:15px;background:var(--gold);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:6px 9px;cursor:pointer}
+.spk:active{transform:translateY(3px);box-shadow:none}
+.fb{min-height:1.5em;font-weight:900;font-size:18px;color:var(--brick)}
+.fb:empty{display:none}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;font-family:var(--f-zy);font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink);
+  background:#fff;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);padding:8px 12px;cursor:pointer;min-height:56px;min-width:0}
+.opt .n{flex:none;font-family:var(--f-px);font-size:10px;background:var(--ink);color:#fff;padding:5px 6px}
+.opt .e{flex:none;font-size:1.35em;line-height:1}
+.opt .zy{min-width:0}
+.opt:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}
+.opt:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.opt.ok{background:#8ae864}
+.opt.no{background:#dcdce4;color:#9a9aa8;box-shadow:none;transform:translateY(4px);animation:shake .3s steps(3)}
+.opt:disabled{cursor:default}
+@keyframes shake{0%,100%{translate:0}33%{translate:-5px}66%{translate:5px}}
+.x{position:absolute;top:8px;right:8px;font-family:var(--f-zy);font-weight:700;font-size:14px;background:#fff;border:3px solid var(--ink);padding:2px 8px;cursor:pointer}
+
+.btn{font-family:var(--f-zy);font-weight:900;font-size:22px;color:#fff;background:var(--brick);border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);padding:8px 22px;cursor:pointer}
+.btn.alt{background:#fff;color:var(--ink);font-size:18px}
+.btn:active{transform:translateY(5px);box-shadow:none}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center}
+
+.center-panel{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:600px}
+.big{font-size:72px;line-height:1;animation:bounce 1s steps(4) infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.headline{font-size:clamp(26px,4.4vw,40px);font-weight:900;color:var(--brick);line-height:1.3}
+.stars{font-size:40px;letter-spacing:6px;color:var(--gold);-webkit-text-stroke:2px var(--ink)}
+.stars .off{color:#d8d4c0}
+.items{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.items .it{background:#fff;border:3px solid var(--ink);padding:4px 10px;font-weight:700;font-size:17px}
+.items .it span:first-child{font-size:22px;margin-right:4px}
+.intro-head{display:flex;align-items:center;gap:12px;text-align:left}
+.intro-lines{font-size:clamp(19px,2.8vw,25px);font-weight:700;line-height:1.6;text-align:left}
+.eyebrow{font-weight:900;font-size:15px;color:var(--muted)}
+
+.title-logo{font-size:clamp(30px,6vw,52px);font-weight:900;color:#fff;line-height:1.2;
+  text-shadow:3px 0 0 var(--ink),-3px 0 0 var(--ink),0 3px 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),6px 6px 0 rgba(0,0,0,.3)}
+.title-logo .b{color:var(--gold)}
+.lvs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.lvcard{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--f-zy);color:var(--ink);background:#fff;border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);padding:10px 6px;cursor:pointer}
+.lvcard:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
+.lvcard .em{font-size:40px;line-height:1.1}
+.lvcard .no{font-weight:700;font-size:14px;color:var(--muted)}
+.lvcard .nm{font-weight:900;font-size:19px}
+.lvcard .st{color:var(--gold);font-size:18px;-webkit-text-stroke:1px var(--ink);letter-spacing:2px}
+.lvcard .st .off{color:#e2dfcf}
+.press{font-family:var(--f-px);font-size:10px;color:var(--muted);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:4px;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none}
+.pad button{font-size:26px;background:var(--paper);border:4px solid var(--ink);box-shadow:0 4px 0 var(--ink);color:var(--ink);touch-action:none;cursor:pointer}
+.pad button:active,.pad button.on{transform:translateY(4px);box-shadow:none;background:var(--gold)}
+.pad .u{grid-column:2;grid-row:1}.pad .l{grid-column:1;grid-row:2}.pad .r{grid-column:3;grid-row:2}.pad .d{grid-column:2;grid-row:3}
+@media (hover:none),(pointer:coarse){.pad{display:grid}}
+
+.help{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:3px solid var(--ink);padding:10px 14px;font-size:15px}
+.help .zy{font-weight:700;font-size:17px}
+.help p{margin:0;color:var(--muted)}
+kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(--ink);padding:2px 4px}
+
+@media (max-width:640px){
+  .ov{position:fixed;inset:0;z-index:30;align-items:center;background:rgba(18,20,60,.6);padding:12px}
+  .talk{grid-template-columns:1fr}
+  .who{flex-direction:row;justify-content:flex-start;text-align:left}
+  .portrait{width:56px;height:56px}
+  .lvs{grid-template-columns:1fr}
+  .lvcard{flex-direction:row;justify-content:flex-start;gap:12px;padding:8px 12px}
+  .lvcard .st{margin-left:auto}
+}
+@media (max-width:420px){.opts{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1 class="logo"><span class="b">ㄅㄆㄇ</span> 小冒險</h1>
+    <div class="tools">
+      <button class="chip" id="btnHan" aria-pressed="true" title="國字開關：關掉就只看注音">國字</button>
+      <button class="chip" id="btnSnd" aria-pressed="true" title="音效開關">🔊 音效</button>
+      <button class="chip" id="btnMenu" title="回到選關">選關</button>
+    </div>
+  </header>
+
+  <div class="hud" id="hud">
+    <div class="lvname" id="lvname"><span class="tag">LV 1</span><span></span></div>
+    <div class="slots" id="slots"></div>
+  </div>
+
+  <div class="shopbar" id="shopbar" hidden aria-live="polite">
+    <canvas class="portrait" id="custPortrait" width="18" height="18"></canvas>
+    <div class="main"><div class="say" id="sbSay"></div><div class="han" id="sbHan"></div><div class="fb" id="sbFb"></div></div>
+    <button class="spk" id="sbSpk">🔊 <span data-zy="ㄊㄧㄥ"></span></button>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="game" width="256" height="192" aria-label="遊戲地圖"></canvas>
+    <div class="ov" id="ov" hidden></div>
+  </div>
+
+  <div class="pad" id="pad" aria-label="方向鍵">
+    <button class="u" data-dir="u" aria-label="上">▲</button>
+    <button class="l" data-dir="l" aria-label="左">◀</button>
+    <button class="r" data-dir="r" aria-label="右">▶</button>
+    <button class="d" data-dir="d" aria-label="下">▼</button>
+  </div>
+
+  <div class="help">
+    <div class="zy"><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <span data-zy="ㄗㄡˇ ㄌㄨˋ"></span>　·　<span data-zy="ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ"></span>　·　<kbd>1</kbd>–<kbd>5</kbd> <span data-zy="ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ"></span></div>
+    <p>給家長：前三關用方向鍵（或 WASD、手機下方方向鍵）走路，碰到頭上有「!」的角色就會出一題注音題，答對就拿到物資，四樣都拿到就過關。第四關「便利商店」裡小孩當店員，客人問商品在哪裡，直接在畫面上點商品（或用方向鍵移動框框、按 Enter），答對 10 題過關。國字預設顯示在注音左邊，按「國字」可關掉只看注音（故意寫錯音的辨音題選項本來就只有注音），按「🔊」會用瀏覽器朗讀。</p>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= 資料：三個關卡 ================= */
+// 每題：say 角色說的話（可省略）、q 問題、pic 題目圖、opts 選項 [注音, 圖]；第一個選項是正確答案，出題時會打亂。
+const LEVELS = [
+{
+  name:'ㄋㄨㄥˊ ㄔㄤˇ', han:'農場', emoji:'🐔', theme:'farm',
+  map:[
+    '################',
+    '#..H....*....*.#',
+    '#.P=.......a...#',
+    '#..=====......*#',
+    '#*....=..FFFFF.#',
+    '#..b..=..F...F.#',
+    '#.....=..F.c.F.#',
+    '#~~...=..FF.FF.#',
+    '#~~~..======...#',
+    '#~~..*....d..*.#',
+    '#..*........R..#',
+    '################'],
+  giver:{name:'ㄇㄚ ˙ㄇㄚ', han:'媽媽', sprite:'mom'},
+  intro:[
+    ['ㄐㄧㄣ ㄊㄧㄢ ㄕˋ ㄇㄟˋ ˙ㄇㄟ ˙ㄉㄜ ㄕㄥ ㄖˋ。','今天是妹妹的生日。'],
+    ['ㄇㄚ ˙ㄇㄚ ㄧㄠˋ ㄗㄨㄛˋ ㄉㄢˋ ㄍㄠ。','媽媽要做蛋糕。'],
+    ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄘㄞˊ ㄌㄧㄠˋ！','請你幫忙找材料！']],
+  win:['ㄉㄢˋ ㄍㄠ ㄗㄨㄛˋ ㄏㄠˇ ˙ㄌㄜ！','蛋糕做好了！','🎂'],
+  npcs:[
+    {key:'a', name:'ㄇㄨˇ ㄐㄧ', han:'母雞', sprite:'hen',
+     item:{e:'🥚', z:'ㄐㄧ ㄉㄢˋ', h:'雞蛋'},
+     hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄕˋ ㄇㄨˇ ㄐㄧ。','你好！我是母雞。'],
+     qs:[
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🥚', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄐㄧ ㄉㄢˋ'],['ㄐㄧ ㄊㄢˋ'],['ㄑㄧ ㄉㄢˋ'],['ㄐㄧ ㄉㄤˋ']]},
+      {say:['ㄇㄨˇ ㄐㄧ ㄒㄧㄚˋ ˙ㄌㄜ ㄙㄢ ˙ㄍㄜ ㄉㄢˋ。','母雞下了三個蛋。'],
+       q:['ㄇㄨˇ ㄐㄧ ㄒㄧㄚˋ ˙ㄌㄜ ㄐㄧˇ ˙ㄍㄜ ㄉㄢˋ？','母雞下了幾個蛋？'],
+       opts:[['ㄙㄢ ˙ㄍㄜ','🥚🥚🥚','三個'],['ㄧ ˙ㄍㄜ','🥚','一個'],['ㄌㄧㄤˇ ˙ㄍㄜ','🥚🥚','兩個'],['ㄙˋ ˙ㄍㄜ','🥚🥚🥚🥚','四個']]}]},
+    {key:'b', name:'ㄋㄨㄥˊ ㄈㄨ ㄅㄛˊ ˙ㄅㄛ', han:'農夫伯伯', sprite:'farmer',
+     item:{e:'🌾', z:'ㄇㄧㄢˋ ㄈㄣˇ', h:'麵粉'},
+     hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄗㄞˋ ㄓㄨㄥˋ ㄘㄞˋ。','你好！我在種菜。'],
+     qs:[
+      {say:['ㄊㄞˋ ㄧㄤˊ ㄔㄨ ㄌㄞˊ ˙ㄌㄜ，ㄊㄧㄢ ㄑㄧˋ ㄏㄣˇ ㄖㄜˋ。','太陽出來了，天氣很熱。'],
+       q:['ㄊㄧㄢ ㄑㄧˋ ㄗㄣˇ ˙ㄇㄜ ㄧㄤˋ？','天氣怎麼樣？'],
+       opts:[['ㄏㄣˇ ㄖㄜˋ','☀️','很熱'],['ㄏㄣˇ ㄌㄥˇ','❄️','很冷'],['ㄒㄧㄚˋ ㄩˇ','🌧️','下雨'],['ㄨㄢˇ ㄕㄤˋ','🌙','晚上']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄘㄞˋ？','這是什麼菜？'], pic:'🥕',
+       opts:[['ㄏㄨˊ ㄌㄨㄛˊ ˙ㄅㄛ','','胡蘿蔔'],['ㄅㄛ ㄘㄞˋ','','菠菜'],['ㄈㄢ ㄑㄧㄝˊ','','番茄'],['ㄩˋ ㄇㄧˇ','','玉米']]}]},
+    {key:'c', name:'ㄖㄨˇ ㄋㄧㄡˊ', han:'乳牛', sprite:'cow',
+     item:{e:'🥛', z:'ㄋㄧㄡˊ ㄋㄞˇ', h:'牛奶'},
+     hi:['ㄇㄡ～ㄨㄛˇ ㄕˋ ㄖㄨˇ ㄋㄧㄡˊ。','哞～我是乳牛。'],
+     qs:[
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🥛', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄋㄧㄡˊ ㄋㄞˇ'],['ㄌㄧㄡˊ ㄋㄞˇ'],['ㄋㄧㄡˊ ㄌㄞˇ'],['ㄋㄧㄠˇ ㄋㄞˇ']]},
+      {say:['ㄖㄨˇ ㄋㄧㄡˊ ㄞˋ ㄔ ㄘㄠˇ。','乳牛愛吃草。'],
+       q:['ㄖㄨˇ ㄋㄧㄡˊ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ？','乳牛愛吃什麼？'],
+       opts:[['ㄘㄠˇ','🌿','草'],['ㄩˊ','🐟','魚'],['ㄖㄡˋ','🍖','肉'],['ㄊㄤˊ','🍬','糖'],['ㄒㄧㄤ ㄐㄧㄠ','🍌','香蕉']]}]},
+    {key:'d', name:'ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ', han:'小兔子', sprite:'bunny',
+     item:{e:'🍓', z:'ㄘㄠˇ ㄇㄟˊ', h:'草莓'},
+     hi:['ㄊㄧㄠˋ ㄊㄧㄠˋ ㄊㄧㄠˋ！ㄨㄛˇ ㄕˋ ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ。','跳跳跳！我是小兔子。'],
+     qs:[
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🍓', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄘㄠˇ ㄇㄟˊ'],['ㄔㄠˇ ㄇㄟˊ'],['ㄗㄠˇ ㄇㄟˊ'],['ㄘㄠˊ ㄇㄟˊ']]},
+      {say:['ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ ˙ㄉㄜ ㄦˇ ˙ㄉㄨㄛ ㄏㄣˇ ㄔㄤˊ。','小兔子的耳朵很長。'],
+       q:['ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ ㄕㄣˊ ˙ㄇㄜ ㄏㄣˇ ㄔㄤˊ？','小兔子什麼很長？'],
+       opts:[['ㄦˇ ˙ㄉㄨㄛ','👂','耳朵'],['ㄅㄧˊ ˙ㄗ','👃','鼻子'],['ㄧㄢˇ ˙ㄐㄧㄥ','👀','眼睛'],['ㄐㄧㄠˇ','🦶','腳'],['ㄗㄨㄟˇ ˙ㄅㄚ','👄','嘴巴']]}]}
+  ]
+},
+{
+  name:'ㄏㄞˇ ㄅㄧㄢ', han:'海邊', emoji:'🏖️', theme:'beach',
+  map:[
+    '~~~~~~~~~~~~~~~~',
+    '~~~~~~~~~~~~~~~~',
+    '~~,,,~~~~~,,,~~~',
+    ',,,a,,,,,,,,b,,,',
+    'T..............T',
+    'T....R.....*...T',
+    'T..=======.....T',
+    'T..=..c..=..R..T',
+    'T..=.....=.....T',
+    'TP.=..T..=..d..T',
+    'T..=.....=.....T',
+    'TTTTTTTTTTTTTTTT'],
+  giver:{name:'ㄍㄜ ˙ㄍㄜ', han:'哥哥', sprite:'bro'},
+  intro:[
+    ['ㄨㄛˇ ˙ㄇㄣ ㄌㄞˊ ㄏㄞˇ ㄅㄧㄢ ㄨㄢˊ。','我們來海邊玩。'],
+    ['ㄍㄜ ˙ㄍㄜ ㄒㄧㄤˇ ㄉㄨㄟ ㄧ ㄗㄨㄛˋ ㄕㄚ ㄅㄠˇ。','哥哥想堆一座沙堡。'],
+    ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄉㄨㄥ ˙ㄒㄧ！','請你幫忙找東西！']],
+  win:['ㄕㄚ ㄅㄠˇ ㄉㄨㄟ ㄏㄠˇ ˙ㄌㄜ！','沙堡堆好了！','🏰'],
+  npcs:[
+    {key:'a', name:'ㄆㄤˊ ㄒㄧㄝˋ', han:'螃蟹', sprite:'crab',
+     item:{e:'🐚', z:'ㄅㄟˋ ㄎㄜˊ', h:'貝殼'},
+     hi:['ㄋㄧˇ ㄏㄠˇ！ㄨㄛˇ ㄕˋ ㄏㄨㄥˊ ㄙㄜˋ ˙ㄉㄜ ㄆㄤˊ ㄒㄧㄝˋ。','你好！我是紅色的螃蟹。'],
+     qs:[
+      {q:['ㄆㄤˊ ㄒㄧㄝˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄧㄢˊ ㄙㄜˋ？','螃蟹是什麼顏色？'],
+       opts:[['ㄏㄨㄥˊ ㄙㄜˋ','🟥','紅色'],['ㄌㄢˊ ㄙㄜˋ','🟦','藍色'],['ㄌㄩˋ ㄙㄜˋ','🟩','綠色'],['ㄏㄨㄤˊ ㄙㄜˋ','🟨','黃色'],['ㄏㄟ ㄙㄜˋ','⬛','黑色']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🐚', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄅㄟˋ ㄎㄜˊ'],['ㄆㄟˋ ㄎㄜˊ'],['ㄅㄟˋ ㄍㄜˊ'],['ㄅㄞˋ ㄎㄜˊ']]}]},
+    {key:'b', name:'ㄩˊ ㄈㄨ', han:'漁夫', sprite:'fisher',
+     item:{e:'🪣', z:'ㄕㄨㄟˇ ㄊㄨㄥˇ', h:'水桶'},
+     hi:['ㄏㄚ ㄏㄚ！ㄨㄛˇ ㄕˋ ㄩˊ ㄈㄨ。','哈哈！我是漁夫。'],
+     qs:[
+      {say:['ㄨㄛˇ ㄉㄧㄠˋ ㄉㄠˋ ˙ㄌㄜ ㄧ ㄊㄧㄠˊ ㄉㄚˋ ㄩˊ！','我釣到了一條大魚！'],
+       q:['ㄩˊ ㄈㄨ ㄉㄧㄠˋ ㄉㄠˋ ˙ㄌㄜ ㄕㄣˊ ˙ㄇㄜ？','漁夫釣到了什麼？'],
+       opts:[['ㄉㄚˋ ㄩˊ','🐟','大魚'],['ㄒㄧㄝˊ ˙ㄗ','👟','鞋子'],['ㄒㄧㄚ ˙ㄗ','🦐','蝦子'],['ㄓㄤ ㄩˊ','🐙','章魚']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🪣', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄕㄨㄟˇ ㄊㄨㄥˇ'],['ㄙㄨㄟˇ ㄊㄨㄥˇ'],['ㄕㄨㄟˇ ㄉㄨㄥˇ'],['ㄕㄨˇ ㄊㄨㄥˇ']]}]},
+    {key:'c', name:'ㄏㄞˇ ㄍㄨㄟ', han:'海龜', sprite:'turtle',
+     item:{e:'⭐', z:'ㄏㄞˇ ㄒㄧㄥ', h:'海星'},
+     hi:['ㄋㄧˇ ㄏㄠˇ…ㄨㄛˇ ㄕˋ ㄏㄞˇ ㄍㄨㄟ。','你好…我是海龜。'],
+     qs:[
+      {say:['ㄏㄞˇ ㄍㄨㄟ ㄆㄚˊ ˙ㄉㄜ ㄏㄣˇ ㄇㄢˋ。','海龜爬得很慢。'],
+       q:['ㄏㄞˇ ㄍㄨㄟ ㄆㄚˊ ˙ㄉㄜ ㄗㄣˇ ˙ㄇㄜ ㄧㄤˋ？','海龜爬得怎麼樣？'],
+       opts:[['ㄏㄣˇ ㄇㄢˋ','🐌','很慢'],['ㄏㄣˇ ㄎㄨㄞˋ','⚡','很快'],['ㄏㄣˇ ㄍㄠ','🦒','很高'],['ㄏㄣˇ ㄌㄟˋ','😪','很累']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'⭐', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄏㄞˇ ㄒㄧㄥ'],['ㄏㄞˇ ㄒㄧㄣ'],['ㄏㄞˋ ㄒㄧㄥ'],['ㄏㄟ ㄒㄧㄥ']]}]},
+    {key:'d', name:'ㄏㄞˇ ㄡ', han:'海鷗', sprite:'gull',
+     item:{e:'🚩', z:'ㄒㄧㄠˇ ㄑㄧˊ ˙ㄗ', h:'小旗子'},
+     hi:['ㄨㄛˇ ㄕˋ ㄏㄞˇ ㄡ，ㄨㄛˇ ㄏㄨㄟˋ ㄈㄟ！','我是海鷗，我會飛！'],
+     qs:[
+      {say:['ㄨㄛˇ ㄗㄞˋ ㄊㄧㄢ ㄕㄤˋ ㄈㄟ。','我在天上飛。'],
+       q:['ㄏㄞˇ ㄡ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ ㄈㄟ？','海鷗在哪裡飛？'],
+       opts:[['ㄊㄧㄢ ㄕㄤˋ','☁️','天上'],['ㄕㄨㄟˇ ㄌㄧˇ','🌊','水裡'],['ㄕㄨˋ ㄒㄧㄚˋ','🌳','樹下'],['ㄐㄧㄚ ㄌㄧˇ','🏠','家裡']]},
+      {say:['ㄏㄞˇ ㄅㄧㄢ ㄧㄡˇ ㄨˇ ㄓ ㄏㄞˇ ㄡ。','海邊有五隻海鷗。'],
+       q:['ㄏㄞˇ ㄅㄧㄢ ㄧㄡˇ ㄐㄧˇ ㄓ ㄏㄞˇ ㄡ？','海邊有幾隻海鷗？'],
+       opts:[['ㄨˇ ㄓ','5️⃣','五隻'],['ㄙㄢ ㄓ','3️⃣','三隻'],['ㄙˋ ㄓ','4️⃣','四隻'],['ㄌㄧㄡˋ ㄓ','6️⃣','六隻']]}]}
+  ]
+},
+{
+  name:'ㄙㄣ ㄌㄧㄣˊ', han:'森林', emoji:'🌲', theme:'forest',
+  map:[
+    '################',
+    '#P..#.....#..a.#',
+    '#...#..*..#....#',
+    '#.===..#..===..#',
+    '#.=.#..#....=.##',
+    '~~B~~~~~~~~~B~~~',
+    '#.=....b......##',
+    '#.====...##.c..#',
+    '#....=...#.....#',
+    '#.d..=..*#...R.#',
+    '#....=.........#',
+    '################'],
+  giver:{name:'ㄅㄚˋ ˙ㄅㄚ', han:'爸爸', sprite:'dad'},
+  intro:[
+    ['ㄊㄧㄢ ㄎㄨㄞˋ ㄏㄟ ˙ㄌㄜ。','天快黑了。'],
+    ['ㄨㄛˇ ˙ㄇㄣ ㄧㄠˋ ㄗㄞˋ ㄙㄣ ㄌㄧㄣˊ ㄌㄨˋ ㄧㄥˊ。','我們要在森林露營。'],
+    ['ㄑㄧㄥˇ ㄋㄧˇ ㄅㄤ ㄇㄤˊ ㄓㄠˇ ㄉㄨㄥ ˙ㄒㄧ！','請你幫忙找東西！']],
+  win:['ㄨㄛˇ ˙ㄇㄣ ㄎㄞ ㄕˇ ㄌㄨˋ ㄧㄥˊ ˙ㄌㄜ！','我們開始露營了！','🏕️'],
+  npcs:[
+    {key:'a', name:'ㄇㄠ ㄊㄡˊ ㄧㄥ', han:'貓頭鷹', sprite:'owl',
+     item:{e:'🔦', z:'ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ', h:'手電筒'},
+     hi:['ㄍㄨ ㄍㄨ！ㄨㄛˇ ㄕˋ ㄇㄠ ㄊㄡˊ ㄧㄥ。','咕咕！我是貓頭鷹。'],
+     qs:[
+      {say:['ㄨㄛˇ ㄅㄞˊ ㄊㄧㄢ ㄕㄨㄟˋ ㄐㄧㄠˋ，ㄨㄢˇ ㄕㄤˋ ㄔㄨ ㄌㄞˊ ㄨㄢˊ。','我白天睡覺，晚上出來玩。'],
+       q:['ㄇㄠ ㄊㄡˊ ㄧㄥ ㄕㄣˊ ˙ㄇㄜ ㄕˊ ˙ㄏㄡ ㄔㄨ ㄌㄞˊ ㄨㄢˊ？','貓頭鷹什麼時候出來玩？'],
+       opts:[['ㄨㄢˇ ㄕㄤˋ','🌙','晚上'],['ㄅㄞˊ ㄊㄧㄢ','☀️','白天'],['ㄗㄠˇ ㄕㄤˋ','🌅','早上'],['ㄓㄨㄥ ㄨˇ','🍱','中午']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🔦', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ'],['ㄙㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˇ'],['ㄕㄡˇ ㄊㄧㄢˋ ㄊㄨㄥˇ'],['ㄕㄡˇ ㄉㄧㄢˋ ㄊㄨㄥˊ']]}]},
+    {key:'b', name:'ㄉㄚˋ ㄒㄩㄥˊ', han:'大熊', sprite:'bear',
+     item:{e:'🪵', z:'ㄇㄨˋ ㄔㄞˊ', h:'木柴'},
+     hi:['ㄏㄡˇ！ㄨㄛˇ ㄕˋ ㄉㄚˋ ㄒㄩㄥˊ。','吼！我是大熊。'],
+     qs:[
+      {say:['ㄨㄛˇ ㄗㄨㄟˋ ㄞˋ ㄔ ㄈㄥ ㄇㄧˋ。','我最愛吃蜂蜜。'],
+       q:['ㄉㄚˋ ㄒㄩㄥˊ ㄗㄨㄟˋ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ？','大熊最愛吃什麼？'],
+       opts:[['ㄈㄥ ㄇㄧˋ','🍯','蜂蜜'],['ㄏㄨˊ ㄌㄨㄛˊ ˙ㄅㄛ','🥕','胡蘿蔔'],['ㄒㄧ ㄍㄨㄚ','🍉','西瓜'],['ㄇㄧㄢˋ ㄅㄠ','🍞','麵包'],['ㄅㄧㄥ ㄑㄧˊ ㄌㄧㄣˊ','🍦','冰淇淋']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'🪵', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄇㄨˋ ㄔㄞˊ'],['ㄇㄨˋ ㄘㄞˊ'],['ㄇㄨˇ ㄔㄞˊ'],['ㄋㄨˋ ㄔㄞˊ']]}]},
+    {key:'c', name:'ㄙㄨㄥ ㄕㄨˇ', han:'松鼠', sprite:'squirrel',
+     item:{e:'🗺️', z:'ㄉㄧˋ ㄊㄨˊ', h:'地圖'},
+     hi:['ㄏㄟ！ㄨㄛˇ ㄕˋ ㄒㄧㄠˇ ㄙㄨㄥ ㄕㄨˇ。','嘿！我是小松鼠。'],
+     qs:[
+      {say:['ㄨㄛˇ ㄗㄞˋ ㄕㄨˋ ㄕㄤˋ ㄔ ㄌㄧˋ ˙ㄗ。','我在樹上吃栗子。'],
+       q:['ㄙㄨㄥ ㄕㄨˇ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ？','松鼠在哪裡？'],
+       opts:[['ㄕㄨˋ ㄕㄤˋ','🌳','樹上'],['ㄏㄜˊ ㄌㄧˇ','🌊','河裡'],['ㄨ ㄉㄧㄥˇ','🏠','屋頂'],['ㄉㄨㄥˋ ㄌㄧˇ','🕳️','洞裡']]},
+      {say:['ㄙㄨㄥ ㄕㄨˇ ˙ㄉㄜ ㄨㄟˇ ˙ㄅㄚ ㄉㄚˋ ㄉㄚˋ ˙ㄉㄜ。','松鼠的尾巴大大的。'],
+       q:['ㄙㄨㄥ ㄕㄨˇ ㄕㄣˊ ˙ㄇㄜ ㄉㄚˋ ㄉㄚˋ ˙ㄉㄜ？','松鼠什麼大大的？'],
+       opts:[['ㄨㄟˇ ˙ㄅㄚ','🐿️','尾巴'],['ㄦˇ ˙ㄉㄨㄛ','👂','耳朵'],['ㄐㄧㄠˇ','🦶','腳'],['ㄧㄢˇ ˙ㄐㄧㄥ','👀','眼睛']]}]},
+    {key:'d', name:'ㄧㄝˊ ˙ㄧㄝ', han:'爺爺', sprite:'grandpa',
+     item:{e:'⛺', z:'ㄓㄤˋ ㄆㄥˊ', h:'帳篷'},
+     hi:['ㄏㄚ ㄏㄚ，ㄒㄧㄠˇ ㄆㄥˊ ˙ㄧㄡ ㄋㄧˇ ㄏㄠˇ！','哈哈，小朋友你好！'],
+     qs:[
+      {say:['ㄊㄧㄢ ㄏㄟ ˙ㄌㄜ，ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄏㄣˇ ㄉㄨㄛ ㄒㄧㄥ ˙ㄒㄧㄥ。','天黑了，天上有很多星星。'],
+       q:['ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄕㄣˊ ˙ㄇㄜ？','天上有什麼？'],
+       opts:[['ㄒㄧㄥ ˙ㄒㄧㄥ','✨','星星'],['ㄘㄞˇ ㄏㄨㄥˊ','🌈','彩虹'],['ㄊㄞˋ ㄧㄤˊ','☀️','太陽'],['ㄏㄨˊ ㄉㄧㄝˊ','🦋','蝴蝶']]},
+      {q:['ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ？','這是什麼？'], pic:'⛺', zyOnly:true, // 故意寫錯音的辨音題：選項只顯示注音
+       opts:[['ㄓㄤˋ ㄆㄥˊ'],['ㄗㄤˋ ㄆㄥˊ'],['ㄓㄤˋ ㄅㄥˊ'],['ㄓㄢˋ ㄆㄥˊ']]}]}
+  ]
+},
+{
+  // 超商關：玩家是店員，客人問商品在哪裡，在畫面上點出來
+  type:'shop', name:'ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ', han:'便利商店', emoji:'🏪', theme:'farm', need:10,
+  giver:{name:'ㄉㄧㄢˋ ㄓㄤˇ', han:'店長', sprite:'clerk'},
+  intro:[
+    ['ㄐㄧㄣ ㄊㄧㄢ ㄋㄧˇ ㄕˋ ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ ˙ㄉㄜ ㄉㄧㄢˋ ㄩㄢˊ。','今天你是便利商店的店員。'],
+    ['ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄨㄣˋ ㄋㄧˇ ㄉㄨㄥ ˙ㄒㄧ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ。','客人會問你東西在哪裡。'],
+    ['ㄑㄧㄥˇ ㄉㄧㄢˇ ㄔㄨ ㄉㄨㄟˋ ˙ㄉㄜ ㄕㄤ ㄆㄧㄣˇ，ㄉㄚˊ ㄉㄨㄟˋ ㄕˊ ㄊㄧˊ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ！','請點出對的商品，答對十題就過關！']],
+  win:['ㄋㄧˇ ㄕˋ ㄗㄨㄟˋ ㄅㄤˋ ˙ㄉㄜ ㄉㄧㄢˋ ㄩㄢˊ！','你是最棒的店員！','🏪'],
+  npcs:[]
+}];
+const LV_NO = ['ㄉㄧˋ ㄧ ㄍㄨㄢ','ㄉㄧˋ ㄦˋ ㄍㄨㄢ','ㄉㄧˋ ㄙㄢ ㄍㄨㄢ','ㄉㄧˋ ㄙˋ ㄍㄨㄢ'];
+const LV_NO_H = ['第一關','第二關','第三關','第四關'];
+
+// 超商貨架：三層，每層七樣 [圖, 注音, 國字]
+const SHOP_ITEMS = [
+  ['🥛','ㄋㄧㄡˊ ㄋㄞˇ','牛奶'],['🧃','ㄍㄨㄛˇ ㄓ','果汁'],['💧','ㄎㄨㄤˋ ㄑㄩㄢˊ ㄕㄨㄟˇ','礦泉水'],['☕','ㄎㄚ ㄈㄟ','咖啡'],
+  ['🍵','ㄌㄩˋ ㄔㄚˊ','綠茶'],['🧋','ㄋㄞˇ ㄔㄚˊ','奶茶'],['🥤','ㄑㄧˋ ㄕㄨㄟˇ','汽水'],
+  ['🍙','ㄈㄢˋ ㄊㄨㄢˊ','飯糰'],['🍞','ㄇㄧㄢˋ ㄅㄠ','麵包'],['🍜','ㄆㄠˋ ㄇㄧㄢˋ','泡麵'],['🍌','ㄒㄧㄤ ㄐㄧㄠ','香蕉'],
+  ['🍎','ㄆㄧㄥˊ ㄍㄨㄛˇ','蘋果'],['🍱','ㄅㄧㄢˋ ㄉㄤ','便當'],['🍦','ㄅㄧㄥ ㄑㄧˊ ㄌㄧㄣˊ','冰淇淋'],
+  ['🍬','ㄊㄤˊ ㄍㄨㄛˇ','糖果'],['🍫','ㄑㄧㄠˇ ㄎㄜˋ ㄌㄧˋ','巧克力'],['🍪','ㄅㄧㄥˇ ㄍㄢ','餅乾'],['🪥','ㄧㄚˊ ㄕㄨㄚ','牙刷'],
+  ['🧻','ㄨㄟˋ ㄕㄥ ㄓˇ','衛生紙'],['☂️','ㄩˇ ㄙㄢˇ','雨傘'],['🔋','ㄉㄧㄢˋ ㄔˊ','電池']];
+const ASK_TPL = [
+  [z => `ㄑㄧㄥˇ ㄨㄣˋ，${z} ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ？`, h => `請問，${h}在哪裡？`],
+  [z => `ㄨㄛˇ ㄒㄧㄤˇ ㄇㄞˇ ${z}。`,              h => `我想買${h}。`],
+  [z => `ㄋㄧˇ ㄏㄠˇ，ㄧㄡˇ ㄇㄟˊ ㄧㄡˇ ${z}？`,    h => `你好，有沒有${h}？`],
+  [z => `ㄨㄛˇ ㄧㄠˋ ㄇㄞˇ ${z}，ㄒㄧㄝˋ ˙ㄒㄧㄝ！`, h => `我要買${h}，謝謝！`]];
+const CUSTOMERS = ['mom','bro','dad','grandpa','auntie','student','farmer','fisher'];
+
+/* ================= 像素畫 ================= */
+const T = 16, COLS = 16, ROWS = 12, INK = '#1b1b2f';
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// 行程長度編碼：'3.10h3.' = 3 個透明 + 10 個 h + 3 個透明
+const rle = s => { let o = ''; s.replace(/(\d+)(\D)/g, (_, n, c) => { o += c.repeat(+n); }); return o.padEnd(16, '.').slice(0, 16); };
+
+const PERSON = ['16.','5.6h5.','4.8h4.','3.10h3.','3.1h8s1h3.','3.2s1k4s1k2s3.','3.2s1k4s1k2s3.','3.1p8s1p3.',
+  '4.3s2m3s4.','5.6s5.','4.8o4.','3.1s8o1s3.','3.1s8o1s3.','4.8b4.','4.3b2.3b4.','4.3d2.3d4.'];
+const CRITTER = ['16.','2.2f8.2f2.','1.1f1i2f6.2f1i1f1.','2.12f2.','1.14f1.','1.3f1k6f1k3f1.','1.3f1k6f1k3f1.',
+  '1.3f3l2k3l3f1.','2.2f8l2f2.','3.10f3.','2.3f2x7f2.','1.4f6l2f2x1.','1.4f6l4f1.','2.4f4l4f2.','2.3f6.3f2.','2.3d6.3d2.'];
+const BIRD = ['16.','7.2r7.','6.4r6.','5.6f5.','4.8f4.','4.1f1k4f1k1f4.','4.8f4.','3.3f4y3f3.','3.4f2y4f3.',
+  '2.12f2.','1.1f1w10f1w1f1.','1.1f2w8f2w1f1.','2.1f2w6f2w1f2.','3.10f3.','5.1y4.1y5.','4.2y4.2y4.'];
+
+function rowsFor(def, frame, back){
+  let r;
+  if (def.t === 'person'){
+    r = PERSON.slice();
+    if (def.v === 'cap'){ r[1]='5.6c5.'; r[2]='4.8c4.'; r[3]= back ? '3.10c3.' : '3.12c1.'; }
+    if (def.v === 'straw'){ r[1]='5.6y5.'; r[2]='4.8y4.'; r[3]='1.14y1.'; }
+    if (def.v === 'bun'){ r[0]='6.4h6.'; }
+    if (back){ r[4]=r[5]=r[6]=r[7]='3.10h3.'; r[8]='4.8h4.'; }
+    if (frame){ r[14]='5.2b2.3b4.'; r[15]='5.2d2.3d4.'; }
+  } else if (def.t === 'critter'){
+    r = CRITTER.slice();
+    if (def.v === 'bunny'){ r[0]='3.2f6.2f3.'; r[1]='3.1f1i6.1i1f3.'; r[2]='3.1f1i6.1i1f3.'; }
+    if (def.v === 'crab'){ r[0]='1.2f10.2f1.'; r[1]='2f1.1f8.1f1.2f'; r[2]='1.3f8.3f1.'; }
+    if (def.v === 'horn'){ r[0]='2.1y10.1y2.'; }
+    if (def.v === 'none'){ r[1]='16.'; r[2]='16.'; }
+    if (frame){ r[14]='3.3f4.3f3.'; r[15]='3.3d4.3d3.'; }
+  } else {
+    r = BIRD.slice();
+    if (def.v === 'tuft'){ r[1]='4.2r4.2r4.'; r[2]='4.3r2.3r4.'; }
+    if (frame){ r[14]='6.1y2.1y6.'; r[15]='5.2y2.2y5.'; }
+  }
+  return r;
+}
+
+function buildSprite(rows, pal){
+  const c = document.createElement('canvas'); c.width = c.height = 18;
+  const g = c.getContext('2d');
+  rows.forEach((row, y) => {
+    const s = rle(row);
+    for (let x = 0; x < 16; x++){
+      const ch = s[x]; if (ch === '.') continue;
+      let col = pal[ch]; if (col === undefined && ch === 'x') col = pal.f;
+      if (!col) continue;
+      g.fillStyle = col; g.fillRect(x + 1, y + 1, 1, 1);
+    }
+  });
+  // 自動描黑邊，做出紅白機的感覺
+  const id = g.getImageData(0, 0, 18, 18), d = id.data, op = i => d[i * 4 + 3] > 0, edge = [];
+  for (let y = 0; y < 18; y++) for (let x = 0; x < 18; x++){
+    const i = y * 18 + x; if (op(i)) continue;
+    if ((x > 0 && op(i - 1)) || (x < 17 && op(i + 1)) || (y > 0 && op(i - 18)) || (y < 17 && op(i + 18))) edge.push(i);
+  }
+  g.fillStyle = INK; edge.forEach(i => g.fillRect(i % 18, Math.floor(i / 18), 1, 1));
+  return c;
+}
+
+const SK = { s:'#ffd0a0', k:INK, p:'#ff9a9a', m:'#d04040', d:'#6a3414' };
+const DEFS = {
+  player:  {t:'person', v:'cap',   pal:{...SK, c:'#2c64f0', h:'#4a2a10', o:'#ff8c1a', b:'#2c3c8c'}},
+  mom:     {t:'person', v:'bun',   pal:{...SK, h:'#5a2c14', o:'#f05a8c', b:'#f05a8c', d:'#8c2c4c'}},
+  bro:     {t:'person', v:'hair',  pal:{...SK, h:INK, o:'#30b0e0', b:'#3c5c9c'}},
+  dad:     {t:'person', v:'cap',   pal:{...SK, c:'#3c8c3c', h:'#2c1c10', o:'#6c8c3c', b:'#5c4c3c'}},
+  hen:     {t:'bird',   v:'comb',  pal:{f:'#ffffff', r:'#e83030', y:'#fcb030', k:INK, w:'#d0d0dc'}},
+  cow:     {t:'critter',v:'horn',  pal:{f:'#ffffff', i:'#ffb0c0', l:'#ffc8d4', k:INK, d:'#555566', y:'#e8d8a0', x:'#2c2c38'}},
+  farmer:  {t:'person', v:'straw', pal:{...SK, h:'#5c3c1c', y:'#f0d060', o:'#e83c3c', b:'#3c5cc8'}},
+  bunny:   {t:'critter',v:'bunny', pal:{f:'#f8f8f8', i:'#ffb0c0', l:'#ffffff', k:INK, d:'#c8c8d0'}},
+  crab:    {t:'critter',v:'crab',  pal:{f:'#e84828', i:'#e84828', l:'#ff9a78', k:INK, d:'#a02810'}},
+  fisher:  {t:'person', v:'cap',   pal:{...SK, c:'#fcd000', h:'#3c2c1c', o:'#fcd000', b:'#2c4c9c'}},
+  turtle:  {t:'critter',v:'none',  pal:{f:'#48b450', l:'#d0ec90', k:INK, d:'#2c7c30', x:'#2c7c30'}},
+  gull:    {t:'bird',   v:'plain', pal:{f:'#ffffff', y:'#fca030', k:INK, w:'#9ca4b8'}},
+  bear:    {t:'critter',v:'ears',  pal:{f:'#9c5c2c', i:'#d8a070', l:'#e8c090', k:INK, d:'#5c3418'}},
+  owl:     {t:'bird',   v:'tuft',  pal:{f:'#a8743c', r:'#6c4420', y:'#fcb030', k:INK, w:'#6c4420'}},
+  squirrel:{t:'critter',v:'ears',  pal:{f:'#e07828', i:'#ffc090', l:'#ffe0b0', k:INK, d:'#9c4c14'}},
+  grandpa: {t:'person', v:'hair',  pal:{...SK, h:'#e8e8f0', o:'#8c3c9c', b:'#5c4c3c'}},
+  clerk:   {t:'person', v:'cap',   pal:{...SK, c:'#2c9c4c', h:'#4a2a10', o:'#2c9c4c', b:'#2c3c5c'}},
+  auntie:  {t:'person', v:'bun',   pal:{...SK, h:'#8c8c9c', o:'#8c4cc8', b:'#5c3c8c'}},
+  student: {t:'person', v:'hair',  pal:{...SK, h:'#2c1c10', o:'#ffffff', b:'#2c4c9c'}},
+};
+const SPR = {};
+for (const [k, def] of Object.entries(DEFS)){
+  SPR[k] = {
+    front:[buildSprite(rowsFor(def,0,false), def.pal), buildSprite(rowsFor(def,1,false), def.pal)],
+    back: [buildSprite(rowsFor(def,0,true),  def.pal), buildSprite(rowsFor(def,1,true),  def.pal)]
+  };
+}
+
+/* ---------- 地圖圖塊 ---------- */
+const THEMES = {
+  farm:  {g:'#64c83c', gd:'#3c9c28', gl:'#a0e870', p:'#e8c080', pd:'#c89858', w:'#3c8cfc', wl:'#c8e8ff',
+          cn:'#28a028', cnd:'#16781a', cnl:'#78d850', trunk:'#8c4c1c', tuft:true, tree:'round', wood:'#c87c3c', woodD:'#8c4c1c'},
+  beach: {g:'#f8d898', gd:'#e0b468', gl:'#fff4d8', p:'#c8884c', pd:'#8c5428', w:'#2c84f0', wl:'#bfe6ff', shore:'#fde9bd',
+          cn:'#30a830', cnd:'#1c7c1c', cnl:'#7cdc54', trunk:'#a0642c', tuft:false, tree:'palm', wood:'#c8884c', woodD:'#8c5428', boardwalk:true},
+  forest:{g:'#3ca040', gd:'#287c2c', gl:'#70cc58', p:'#d0a060', pd:'#a07440', w:'#2c6cdc', wl:'#a8d4ff',
+          cn:'#1c8c3c', cnd:'#106028', cnl:'#58c060', trunk:'#6c3c14', tuft:true, tree:'pine', wood:'#b8743c', woodD:'#7c4818'}
+};
+const SOLID = new Set(['#','T','~','H','F','R']);
+
+function hash(x, y, k){
+  let h = Math.imul(x + 7, 374761393) + Math.imul(y + 13, 668265263) + Math.imul(k + 1, 1442695041);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+const P = (g, x, y, c, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+const ri = (x, y, k, n) => Math.floor(hash(x, y, k) * n);
+
+function ground(g, ox, oy, x, y, th){
+  P(g, ox, oy, th.g, 16, 16);
+  for (let i = 0; i < 6; i++) P(g, ox + ri(x,y,i,16), oy + ri(x,y,i+50,16), th.gd);
+  for (let i = 0; i < 3; i++) P(g, ox + ri(x,y,i+20,16), oy + ri(x,y,i+30,16), th.gl);
+  if (th.tuft && hash(x,y,99) < .45){
+    const tx = ox + 2 + ri(x,y,98,10), ty = oy + 3 + ri(x,y,97,10);
+    P(g, tx, ty, th.gd); P(g, tx + 2, ty, th.gd); P(g, tx + 1, ty + 1, th.gd);
+  }
+}
+function path(g, ox, oy, x, y, th){
+  if (th.boardwalk){
+    P(g, ox, oy, th.p, 16, 16);
+    for (let i = 0; i < 4; i++) P(g, ox, oy + i * 4 + 3, th.pd, 16, 1);
+    P(g, ox + (x % 2 ? 5 : 11), oy, th.pd, 1, 16);
+    return;
+  }
+  P(g, ox, oy, th.p, 16, 16);
+  for (let i = 0; i < 7; i++) P(g, ox + ri(x,y,i+60,15), oy + ri(x,y,i+70,15), th.pd, i % 3 ? 1 : 2, 1);
+}
+function flower(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  const cols = ['#ffffff', '#ff6ea8', '#fce040', '#ff8c3c'];
+  for (let k = 0; k < 2; k++){
+    const fx = ox + 3 + ri(x,y,k+80,9), fy = oy + 3 + ri(x,y,k+85,9), c = cols[ri(x,y,k+90,4)];
+    P(g, fx, fy - 1, c); P(g, fx - 1, fy, c); P(g, fx + 1, fy, c); P(g, fx, fy + 1, c); P(g, fx, fy, '#fcd000');
+    P(g, fx, fy + 2, th.gd, 1, 2);
+  }
+}
+function roundTree(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  P(g, ox + 6, oy + 11, INK, 4, 5); P(g, ox + 7, oy + 11, th.trunk, 2, 5);
+  for (let ly = 0; ly < 14; ly++) for (let lx = 0; lx < 16; lx++){
+    const dx = lx - 7.5, dy = ly - 6.5, d = dx * dx + dy * dy;
+    if (d <= 7.6 * 7.6){
+      let c = INK;
+      if (d <= 6.6 * 6.6){ c = (dx + dy > 3) ? th.cnd : th.cn; if ((lx - 5) ** 2 + (ly - 4) ** 2 < 3) c = th.cnl; }
+      P(g, ox + lx, oy + ly, c);
+    }
+  }
+  P(g, ox + 10, oy + 6, th.cnl); P(g, ox + 4, oy + 9, th.cnd);
+}
+function pine(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  P(g, ox + 6, oy + 12, INK, 4, 4); P(g, ox + 7, oy + 12, th.trunk, 2, 4);
+  for (let ly = 0; ly < 13; ly++){
+    const tier = Math.floor(ly / 4.4), w = Math.min(7, 1 + (ly % 4.4) * 1.1 + tier * 1.6) | 0;
+    P(g, ox + 8 - w - 1, oy + ly, INK, (w + 1) * 2, 1);
+    if (ly > 0) P(g, ox + 8 - w, oy + ly, th.cn, w * 2, 1);
+    if (ly > 0) P(g, ox + 8, oy + ly, th.cnd, w, 1);
+    if (ly > 1 && ly % 4 === 2) P(g, ox + 8 - w + 1, oy + ly, th.cnl, 2, 1);
+  }
+}
+function palm(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  for (let ly = 5; ly < 16; ly++){
+    const tx = ox + 7 + (ly < 9 ? 1 : 0);
+    P(g, tx - 1, oy + ly, INK, 4, 1); P(g, tx, oy + ly, ly % 3 ? th.trunk : '#7a4618', 2, 1);
+  }
+  const fr = [[-1,-1],[1,-1],[-1,0],[1,0],[0,-1]];
+  fr.forEach(([dx, dy]) => {
+    for (let i = 0; i < 7; i++){
+      const px = ox + 8 + dx * i, py = oy + 4 + dy * i + (dx ? Math.floor(i * i / 10) : 0);
+      if (px < ox || px > ox + 15 || py < oy) continue;
+      P(g, px, py - 1, INK, 1, 3); P(g, px, py, i % 2 ? th.cn : th.cnl);
+    }
+  });
+  P(g, ox + 7, oy + 4, '#7a4618', 2, 2);
+}
+function fence(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  [5, 10].forEach(ry => { P(g, ox, oy + ry, INK, 16, 4); P(g, ox, oy + ry + 1, th.wood, 16, 2); });
+  [2, 10].forEach(px => { P(g, ox + px, oy + 2, INK, 4, 13); P(g, ox + px + 1, oy + 3, th.wood, 2, 11); P(g, ox + px + 1, oy + 3, '#e8a868', 1, 1); });
+}
+function house(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  P(g, ox + 2, oy + 7, INK, 12, 9); P(g, ox + 3, oy + 8, '#f8e8c0', 10, 8);
+  for (let ly = 0; ly < 8; ly++){
+    const h = ly + 1; P(g, ox + 8 - h, oy + ly, INK, h * 2, 1);
+    if (ly > 0) P(g, ox + 8 - h + 1, oy + ly, ly % 2 ? '#d83c28' : '#b02c1c', h * 2 - 2, 1);
+  }
+  P(g, ox + 7, oy + 11, INK, 3, 5); P(g, ox + 8, oy + 12, '#7a3c10', 1, 4);
+  P(g, ox + 4, oy + 9, INK, 3, 3); P(g, ox + 4, oy + 9, '#5cc8fc', 2, 2);
+}
+function rock(g, ox, oy, x, y, th){
+  ground(g, ox, oy, x, y, th);
+  for (let ly = 0; ly < 16; ly++) for (let lx = 0; lx < 16; lx++){
+    const dx = (lx - 7.5) / 6.5, dy = (ly - 10) / 5, d = dx * dx + dy * dy;
+    if (d <= 1.25) P(g, ox + lx, oy + ly, d > .95 ? INK : (dx + dy > .4 ? '#7c7c90' : '#a8a8bc'));
+  }
+  P(g, ox + 5, oy + 7, '#dcdce8', 2, 1); P(g, ox + 4, oy + 8, '#dcdce8', 1, 1);
+}
+function water(g, ox, oy, th){ P(g, ox, oy, th.w, 16, 16); }
+function shore(g, ox, oy, x, y, th){
+  P(g, ox, oy, th.shore, 16, 16);
+  for (let i = 0; i < 5; i++) P(g, ox + ri(x,y,i+40,16), oy + ri(x,y,i+45,16), th.gd);
+}
+function bridge(g, ox, oy, x, y, th){
+  water(g, ox, oy, th);
+  P(g, ox + 2, oy, INK, 12, 16); P(g, ox + 3, oy, th.wood, 10, 16);
+  for (let i = 0; i < 4; i++) P(g, ox + 3, oy + i * 4 + 3, th.woodD, 10, 1);
+}
+
+function renderBg(level){
+  const bg = document.createElement('canvas'); bg.width = 256; bg.height = 192;
+  const g = bg.getContext('2d'); const th = THEMES[level.theme];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
+    const ch = grid[y][x], ox = x * T, oy = y * T;
+    switch (ch){
+      case '#': case 'T': (th.tree === 'pine' ? pine : th.tree === 'palm' ? palm : roundTree)(g, ox, oy, x, y, th); break;
+      case '~': water(g, ox, oy, th); break;
+      case '=': path(g, ox, oy, x, y, th); break;
+      case '*': flower(g, ox, oy, x, y, th); break;
+      case 'F': fence(g, ox, oy, x, y, th); break;
+      case 'H': house(g, ox, oy, x, y, th); break;
+      case 'R': rock(g, ox, oy, x, y, th); break;
+      case ',': shore(g, ox, oy, x, y, th); break;
+      case 'B': bridge(g, ox, oy, x, y, th); break;
+      default: ground(g, ox, oy, x, y, th);
+    }
+  }
+  return bg;
+}
+
+/* ---------- 超商畫面 ---------- */
+// 把 emoji 畫到 16px 小畫布、去掉半透明邊再描黑邊，變成像素風商品
+let EMO = null;
+function emojiSprite(e){
+  const c = document.createElement('canvas'); c.width = c.height = 18;
+  const g = c.getContext('2d');
+  g.font = '14px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(e, 9, 10);
+  const id = g.getImageData(0, 0, 18, 18), d = id.data;
+  for (let i = 3; i < d.length; i += 4) d[i] = d[i] < 110 ? 0 : 255;
+  g.putImageData(id, 0, 0);
+  const op = i => d[i * 4 + 3] > 0, edge = [];
+  for (let y = 0; y < 18; y++) for (let x = 0; x < 18; x++){
+    const i = y * 18 + x; if (op(i)) continue;
+    if ((x > 0 && op(i - 1)) || (x < 17 && op(i + 1)) || (y > 0 && op(i - 18)) || (y < 17 && op(i + 18))) edge.push(i);
+  }
+  g.fillStyle = INK; edge.forEach(i => g.fillRect(i % 18, Math.floor(i / 18), 1, 1));
+  return c;
+}
+const SHELF_Y = r => 12 + r * 42;
+const CELL_X = c => 9 + c * 34;
+function cellAt(gx, gy){
+  for (let i = 0; i < SHOP_ITEMS.length; i++){
+    const x = CELL_X(i % 7), y = SHELF_Y(Math.floor(i / 7));
+    if (gx >= x && gx < x + 34 && gy >= y && gy < y + 34) return i;
+  }
+  return -1;
+}
+let counterLayer = null;
+function renderShopBg(){
+  if (!EMO) EMO = SHOP_ITEMS.map(it => emojiSprite(it[0]));
+  const c = document.createElement('canvas'); c.width = 256; c.height = 192;
+  const g = c.getContext('2d');
+  P(g, 0, 0, '#f6eedc', 256, 136);
+  for (let x = 0; x < 256; x += 16) P(g, x, 8, '#ebe0c8', 1, 128);
+  P(g, 0, 0, '#ff8c1a', 256, 3); P(g, 0, 3, '#2c9c4c', 256, 3); P(g, 0, 6, '#e83c3c', 256, 2);
+  for (let r = 0; r < 3; r++){
+    const y = SHELF_Y(r), fridge = r === 0;
+    P(g, 6, y - 2, INK, 244, 38); P(g, 7, y - 1, fridge ? '#bfe3f5' : '#e8d6b0', 242, 36);
+    if (fridge) for (let c2 = 0; c2 < 7; c2++){
+      const x = CELL_X(c2);
+      if (c2) P(g, x - 1, y - 1, '#7c96aa', 2, 30);
+      for (let k = 0; k < 6; k++) P(g, x + 4 + k, y + 2 + k, '#e6f6ff');
+    }
+    for (let c2 = 0; c2 < 7; c2++){
+      const i = r * 7 + c2, x = CELL_X(c2);
+      g.drawImage(EMO[i], x + 14, y + 9); g.drawImage(EMO[i], x + 1, y + 11);
+    }
+    P(g, 6, y + 28, INK, 244, 6); P(g, 7, y + 29, fridge ? '#9aa8b8' : '#a0643c', 242, 4);
+    for (let c2 = 0; c2 < 7; c2++) P(g, CELL_X(c2) + 13, y + 30, '#ffffff', 7, 2);
+  }
+  for (let y = 136; y < 192; y += 8) for (let x = 0; x < 256; x += 8)
+    P(g, x, y, ((x + y) / 8) % 2 ? '#d6d6e4' : '#ececf4', 8, 8);
+  P(g, 0, 134, INK, 256, 2);
+  P(g, 214, 136, INK, 36, 56); P(g, 216, 138, '#bfe3f5', 32, 54); P(g, 231, 138, INK, 2, 54);
+  for (let k = 0; k < 8; k++){ P(g, 219 + k, 142 + k, '#e6f6ff'); P(g, 236 + k, 142 + k, '#e6f6ff'); }
+  P(g, 212, 186, '#2c9c4c', 40, 6);
+  counterLayer = document.createElement('canvas'); counterLayer.width = 256; counterLayer.height = 192;
+  const k = counterLayer.getContext('2d');
+  P(k, 8, 162, INK, 104, 28); P(k, 9, 163, '#e8a050', 102, 26); P(k, 9, 163, '#c87c3c', 102, 4);
+  for (let x = 20; x < 110; x += 18) P(k, x, 170, '#d08a40', 10, 2);
+  P(k, 18, 150, INK, 20, 13); P(k, 19, 151, '#9aa0b4', 18, 11); P(k, 21, 153, '#3cdc78', 10, 4);
+  return c;
+}
+
+const shop = { queue:[], correct:0, target:-1, phase:'off', x:236, sprite:'mom', tpl:0, timer:0, carry:-1, marks:[], cursor:0, showCursor:false, last:'' };
+const sbar = () => document.getElementById('shopbar');
+function setBar(sayZ, sayH, fb){
+  document.getElementById('sbSay').innerHTML = sayZ ? Z(sayZ, sayH) : '';
+  document.getElementById('sbHan').textContent = sayH || '';
+  document.getElementById('sbFb').innerHTML = fb || '';
+  const c = document.getElementById('custPortrait'), g = c.getContext('2d');
+  g.imageSmoothingEnabled = false; g.clearRect(0, 0, 18, 18); g.drawImage(SPR[shop.sprite].front[0], 0, 0);
+  shop.speech = sayH || '';
+}
+function setupShop(){
+  shop.queue = shuffle(SHOP_ITEMS.map((_, i) => i)).slice(0, L.need);
+  Object.assign(shop, { correct:0, phase:'off', marks:[], carry:-1, cursor:0, showCursor:false, last:'' });
+}
+function nextCustomer(){
+  const pool = CUSTOMERS.filter(s => s !== shop.last);
+  shop.sprite = pool[Math.floor(Math.random() * pool.length)]; shop.last = shop.sprite;
+  shop.target = shop.queue[shop.correct];
+  shop.tpl = Math.floor(Math.random() * ASK_TPL.length);
+  Object.assign(shop, { x:236, phase:'enter', carry:-1 });
+  beep(1319, .12, 'square', .04); beep(1047, .2, 'square', .04, .14); // 自動門叮咚
+  setBar('ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！', '歡迎光臨！');
+}
+function askNow(){
+  const it = SHOP_ITEMS[shop.target], t = ASK_TPL[shop.tpl];
+  shop.phase = 'ask'; SFX.talk();
+  setBar(t[0](it[1]), t[1](it[2]));
+}
+function pickItem(i){
+  if (state.mode !== 'play' || shop.phase !== 'ask' || i < 0) return;
+  const it = SHOP_ITEMS[i];
+  if (i === shop.target){
+    shop.correct++; SFX.ok(); setTimeout(SFX.item, 320);
+    shop.marks.push({ i, ok:true, t:50 });
+    shop.carry = i; shop.phase = 'thanks'; shop.timer = 50;
+    setBar('ㄉㄨㄟˋ ˙ㄌㄜ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '對了！謝謝你！',
+      `<span style="color:var(--leaf)">${it[0]} ${Z(it[1])}</span>`);
+    renderHud(true);
+  } else {
+    state.mistakes++; SFX.no();
+    shop.marks.push({ i, ok:false, t:45 });
+    document.getElementById('sbFb').innerHTML = `${it[0]} ${Z('ㄓㄜˋ ㄕˋ ' + it[1] + '，ㄗㄞˋ ㄓㄠˇ ㄓㄠˇ ㄎㄢˋ！', '這是' + it[2] + '，再找找看！')}`;
+  }
+}
+function updateShop(){
+  shop.marks.forEach(m => m.t--); shop.marks = shop.marks.filter(m => m.t > 0);
+  const p = shop.phase;
+  if (p === 'enter'){ shop.x -= 1.5; if (shop.x <= 118){ shop.x = 118; askNow(); } }
+  else if (p === 'thanks'){ if (--shop.timer <= 0) shop.phase = 'leave'; }
+  else if (p === 'leave'){ shop.x += 1.5; if (shop.x >= 236){ shop.phase = 'wait'; shop.timer = 30; } }
+  else if (p === 'wait' && --shop.timer <= 0){
+    if (shop.correct >= L.need){ shop.phase = 'off'; state.mode = 'busy'; setTimeout(levelClear, 300); }
+    else nextCustomer();
+  }
+}
+const GLYPH_Q = ['.###.','#...#','...#.','..#..','.....','..#..'];
+function drawShop(){
+  ctx.drawImage(bg, 0, 0);
+  const blink = Math.floor(frame / 16) % 2;
+  if (shop.showCursor && state.mode === 'play'){
+    const x = CELL_X(shop.cursor % 7), y = SHELF_Y(Math.floor(shop.cursor / 7));
+    const col = blink ? '#fcbc3c' : '#ff8c1a';
+    P(ctx, x, y + 1, col, 34, 2); P(ctx, x, y + 31, col, 34, 2); P(ctx, x, y + 1, col, 2, 32); P(ctx, x + 32, y + 1, col, 2, 32);
+  }
+  shop.marks.forEach(m => {
+    const x = CELL_X(m.i % 7), y = SHELF_Y(Math.floor(m.i / 7));
+    if (m.ok){
+      if (Math.floor(m.t / 5) % 2){ P(ctx, x, y + 1, '#3cdc78', 34, 3); P(ctx, x, y + 30, '#3cdc78', 34, 3); P(ctx, x, y + 1, '#3cdc78', 3, 32); P(ctx, x + 31, y + 1, '#3cdc78', 3, 32); }
+      [[4,4],[28,6],[8,24],[26,26]].forEach(([sx, sy], k) => { if ((m.t + k * 3) % 10 < 5) { P(ctx, x + sx, y + sy - 1, '#fff7a0', 1, 3); P(ctx, x + sx - 1, y + sy, '#fff7a0', 3, 1); } });
+    } else {
+      for (let k = 0; k < 14; k++){ P(ctx, x + 10 + k, y + 8 + k, '#e83030', 2, 2); P(ctx, x + 23 - k, y + 8 + k, '#e83030', 2, 2); }
+    }
+  });
+  drawSprite(SPR.clerk.front[0], 55, 146, false);
+  ctx.drawImage(counterLayer, 0, 0);
+  if (shop.phase !== 'off' && shop.phase !== 'wait'){
+    const walking = shop.phase === 'enter' || shop.phase === 'leave';
+    const fr = walking ? Math.floor(frame / 6) % 2 : 0;
+    drawSprite(SPR[shop.sprite].front[fr], Math.round(shop.x), 148, shop.phase === 'enter');
+    if (shop.phase === 'ask'){
+      const bx = Math.round(shop.x) + 4, by = 136 - blink;
+      P(ctx, bx, by, INK, 9, 10); P(ctx, bx + 1, by + 1, '#ffffff', 7, 8);
+      GLYPH_Q.forEach((row, yy) => [...row].forEach((ch, xx) => { if (ch === '#') P(ctx, bx + 2 + xx, by + 2 + yy, '#2c64f0'); }));
+    }
+    if (shop.carry >= 0) ctx.drawImage(EMO[shop.carry], Math.round(shop.x), 130 - blink);
+  }
+}
+
+/* ================= 音效與朗讀 ================= */
+let AC = null, muted = false;
+function audio(){
+  if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function beep(f, d, type = 'square', v = .05, when = 0){
+  if (muted) return; const a = audio(); if (!a) return;
+  const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .03);
+}
+const SFX = {
+  blip: () => beep(880, .05, 'square', .04),
+  bump: () => beep(110, .08, 'triangle', .12),
+  talk: () => { beep(660, .05); beep(990, .06, 'square', .04, .06); },
+  ok:   () => [523, 659, 784, 1047].forEach((f, i) => beep(f, .12, 'square', .05, i * .08)),
+  no:   () => { beep(220, .14, 'sawtooth', .04); beep(165, .24, 'sawtooth', .04, .14); },
+  item: () => [784, 988, 1175, 1568].forEach((f, i) => beep(f, .1, 'square', .05, i * .07)),
+  clear:() => [523, 523, 659, 784, 659, 784, 1047].forEach((f, i) => beep(f, i === 6 ? .5 : .13, 'square', .05, i * .15))
+};
+const canSpeak = 'speechSynthesis' in window;
+function speak(text){
+  if (!canSpeak) return;
+  try {
+    const s = window.speechSynthesis; s.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = .8;
+    const vs = s.getVoices();
+    const v = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang));
+    if (v) u.voice = v;
+    s.speak(u);
+  } catch (e) {}
+}
+
+/* ================= 存檔（只存在這台裝置） ================= */
+const SAVE_KEY = 'bpm-adventure-v1';
+let best = [0, 0, 0];
+try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && Array.isArray(s.best)) best = s.best; } catch (e) {}
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best })); } catch (e) {} }
+
+/* ================= 遊戲狀態 ================= */
+const state = { mode:'title', lv:0, mistakes:0, got:new Set() };
+let L = LEVELS[0], grid = [], npcs = [], bg = null;
+const player = { x:0, y:0, px:0, py:0, dx:0, dy:0, moving:false, face:'d', step:0 };
+let held = [], frame = 0, bumpCool = 0;
+
+const $ = id => document.getElementById(id);
+const ov = $('ov');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 注音 → 國字對照表：從關卡資料自動收集，再加上介面用語
+const HZ = new Map();
+const addHz = (z, h) => { if (z && h) HZ.set(z.trim(), h); };
+LEVELS.forEach((lv, i) => {
+  addHz(lv.name, lv.han); addHz(lv.giver.name, lv.giver.han); addHz(lv.win[0], lv.win[1]);
+  addHz(LV_NO[i], LV_NO_H[i]);
+  lv.intro.forEach(l => addHz(l[0], l[1]));
+  lv.npcs.forEach(n => {
+    addHz(n.name, n.han); addHz(n.hi[0], n.hi[1]); addHz(n.item.z, n.item.h);
+    n.qs.forEach(q => { if (q.say) addHz(q.say[0], q.say[1]); addHz(q.q[0], q.q[1]); if (!q.zyOnly) q.opts.forEach(o => addHz(o[0], o[2])); });
+  });
+});
+SHOP_ITEMS.forEach(it => addHz(it[1], it[2]));
+[['ㄊㄧㄥ','聽'],['ㄏㄠˇ','好'],['ㄒㄧㄠˇ ㄇㄠˋ ㄒㄧㄢˇ','小冒險'],['ㄒㄩㄢˇ ㄧ ㄍㄨㄢ ˙ㄅㄚ！','選一關吧！'],
+ ['ㄧㄠˋ ㄓㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','要找的東西'],['ㄎㄞ ㄕˇ','開始'],['ㄉㄚˊ ㄉㄨㄟˋ ˙ㄌㄜ！','答對了！'],
+ ['ㄗㄞˋ ㄒㄧㄤˇ ㄧ ㄒㄧㄤˇ！','再想一想！'],['ㄋㄧˇ ㄉㄜˊ ㄉㄠˋ','你得到'],['ㄍㄨㄛˋ ㄍㄨㄢ ˙ㄌㄜ！','過關了！'],
+ ['ㄑㄩㄢˊ ㄅㄨˋ ㄨㄢˊ ㄔㄥˊ！ㄋㄧˇ ㄏㄠˇ ㄅㄤˋ！','全部完成！你好棒！'],['ㄗㄞˋ ㄨㄢˊ ㄧ ㄘˋ','再玩一次'],
+ ['ㄒㄩㄢˇ ㄍㄨㄢ','選關'],['ㄒㄧㄚˋ ㄧ ㄍㄨㄢ','下一關'],['ㄉㄚˊ ㄉㄨㄟˋ','答對'],['ㄊㄧˊ','題'],['ㄉㄧㄢˇ ㄕㄤ ㄆㄧㄣˇ','點商品'],
+ ['ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！ㄐㄧㄚ ㄧㄡˊ！','謝謝你！加油！'],['ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！','歡迎光臨！'],
+ ['ㄉㄨㄟˋ ˙ㄌㄜ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！','對了！謝謝你！'],['ㄗㄡˇ ㄌㄨˋ','走路'],
+ ['ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','碰到人就可以說話'],['ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ','選答案']
+].forEach(([z, h]) => addHz(z, h));
+
+// 國字＋直式注音：國字在左，注音由上往下排在右邊，聲調在注音右邊，輕聲點在最上面。
+// han 傳 false 代表只顯示注音（故意寫錯音的辨音選項）；沒傳就從對照表找。
+const BPM = /[ㄅ-ㄯ]/, TONE = /[ˊˇˋ]/, CJK = /[㐀-鿿]/;
+const Z = (s, han) => {
+  s = String(s);
+  if (han !== false && typeof han !== 'string') han = HZ.get(s.trim());
+  const chars = typeof han === 'string' ? [...han].filter(c => CJK.test(c)) : [];
+  const toks = [];
+  let dot = false, letters = '';
+  const flush = tone => { if (letters || dot) toks.push({ dot, letters, tone }); letters = ''; dot = false; };
+  for (const ch of s){
+    if (/\s/.test(ch)){ flush(); continue; }
+    if (ch === '˙'){ flush(); dot = true; continue; }
+    if (BPM.test(ch)){ letters += ch; continue; }
+    if (TONE.test(ch) && letters){ flush(ch); continue; }
+    flush(); toks.push({ pu:ch });
+  }
+  flush();
+  const nSy = toks.filter(t => !t.pu).length;
+  const pair = chars.length === nSy && nSy > 0;
+  if (han !== false && !pair && nSy) console.warn('注音沒有對應的國字：', s, han);
+  let k = 0;
+  return toks.map(t => {
+    if (t.pu) return `<span class="pu">${esc(t.pu)}</span>`;
+    const sy = `<span class="sy"><span class="col">${t.dot ? '<i class="dot">˙</i>' : ''}${[...t.letters].map(c => `<b>${c}</b>`).join('')}</span>${t.tone ? `<span class="tn">${t.tone}</span>` : ''}</span>`;
+    return pair ? `<span class="ru"><span class="hz">${esc(chars[k++])}</span>${sy}</span>` : sy;
+  }).join('');
+};
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const starsHtml = n => [0,1,2].map(i => `<span class="${i < n ? '' : 'off'}">★</span>`).join('');
+
+function loadLevel(i, got){
+  state.lv = i; L = LEVELS[i]; state.mistakes = 0;
+  state.got = new Set(got || []);
+  sbar().hidden = L.type !== 'shop';
+  if (L.type === 'shop'){ grid = []; npcs = []; bg = renderShopBg(); setupShop(); renderHud(); return; }
+  grid = L.map.map(r => r.padEnd(COLS, '.').slice(0, COLS).split(''));
+  npcs = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
+    const ch = grid[y][x];
+    if (ch === 'P'){ Object.assign(player, { x, y, px:x*T, py:y*T, moving:false, face:'d', step:0 }); grid[y][x] = '.'; }
+    const n = L.npcs.find(n => n.key === ch);
+    if (n){
+      const idx = L.npcs.indexOf(n);
+      npcs.push({ ...n, idx, x, y, done: state.got.has(idx), qi: Math.floor(Math.random() * n.qs.length) });
+      grid[y][x] = '.';
+    }
+  }
+  bg = renderBg(L);
+  renderHud();
+}
+
+function renderHud(popIdx){
+  $('lvname').innerHTML = `<span class="tag">LV ${state.lv + 1}</span><span>${Z(L.name)}</span>`;
+  if (L.type === 'shop'){
+    $('slots').innerHTML = `<div class="slot got ${popIdx ? 'pop' : ''}"><span class="ic">🛍️</span><span class="nm">${Z('ㄉㄚˊ ㄉㄨㄟˋ')} <b>${shop.correct}</b> / ${L.need}</span></div>
+      <div class="pips" aria-hidden="true">${Array.from({ length:L.need }, (_, i) => `<i class="${i < shop.correct ? 'on' : ''}"></i>`).join('')}</div>`;
+    return;
+  }
+  $('slots').innerHTML = L.npcs.map((n, i) =>
+    `<div class="slot ${state.got.has(i) ? 'got' : ''} ${popIdx === i ? 'pop' : ''}" title="${esc(n.item.h)}"><span class="ic">${n.item.e}</span><span class="nm">${Z(n.item.z)}</span></div>`).join('');
+}
+
+/* ---------- 疊層畫面 ---------- */
+function showOv(html, center){
+  ov.innerHTML = html; ov.className = 'ov' + (center ? ' center' : ''); ov.hidden = false;
+  held = []; setPad();
+  const f = ov.querySelector('[data-focus]') || ov.querySelector('button');
+  if (f) setTimeout(() => f.focus({ preventScroll:true }), 30);
+}
+function hideOv(){ ov.hidden = true; ov.innerHTML = ''; }
+function drawPortrait(name){
+  const c = ov.querySelector('.portrait'); if (!c) return;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 18, 18);
+  g.drawImage(SPR[name].front[0], 0, 0);
+}
+const spkBtn = () => canSpeak ? `<button class="spk" data-speak>🔊 ${Z('ㄊㄧㄥ')}</button>` : '';
+
+function showTitle(){
+  state.mode = 'title';
+  loadLevel(0);
+  showOv(`<div class="panel center-panel">
+    <div class="title-logo"><span class="b">ㄅㄆㄇ</span><br>${Z('ㄒㄧㄠˇ ㄇㄠˋ ㄒㄧㄢˇ')}</div>
+    <div class="say">${Z('ㄒㄩㄢˇ ㄧ ㄍㄨㄢ ˙ㄅㄚ！')}</div>
+    <div class="lvs">${LEVELS.map((lv, i) => `
+      <button class="lvcard" data-lv="${i}" ${i === 0 ? 'data-focus' : ''}>
+        <span class="em">${lv.emoji}</span>
+        <span><span class="no">${Z(LV_NO[i])}</span><br><span class="nm">${Z(lv.name)}</span></span>
+        <span class="st">${starsHtml(best[i] || 0)}</span>
+      </button>`).join('')}</div>
+    <div class="press">PRESS ENTER</div>
+  </div>`, true);
+  ov.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { SFX.blip(); startLevel(+b.dataset.lv); });
+}
+
+function startLevel(i){
+  loadLevel(i);
+  state.mode = 'intro';
+  const text = L.intro.map(l => l[1]).join('');
+  showOv(`<div class="panel center-panel">
+    <div class="intro-head"><canvas class="portrait" width="18" height="18"></canvas>
+      <div><div class="eyebrow">${Z(LV_NO[i])} · ${Z(L.name)}</div><div class="say">${Z(L.giver.name)}</div></div></div>
+    <div class="intro-lines">${L.intro.map(l => `<div>${Z(l[0])}<div class="han">${esc(l[1])}</div></div>`).join('')}</div>
+    ${L.type === 'shop'
+      ? `<div class="items"><span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${L.need} ${Z('ㄊㄧˊ')}</span><span class="it"><span>👆</span>${Z('ㄉㄧㄢˇ ㄕㄤ ㄆㄧㄣˇ')}</span></div>`
+      : `<div class="eyebrow">${Z('ㄧㄠˋ ㄓㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ')}</div>
+    <div class="items">${L.npcs.map(n => `<span class="it"><span>${n.item.e}</span>${Z(n.item.z)}</span>`).join('')}</div>`}
+    <div class="row">${spkBtn()}<button class="btn" data-primary data-focus>${Z('ㄎㄞ ㄕˇ')} ▶</button></div>
+  </div>`, true);
+  drawPortrait(L.giver.sprite);
+  bindSpeak(text);
+  ov.querySelector('[data-primary]').onclick = () => {
+    SFX.blip(); hideOv(); state.mode = 'play';
+    if (L.type === 'shop') setTimeout(() => { if (shop.phase === 'off' && state.mode === 'play') nextCustomer(); }, 400);
+  };
+}
+
+function bindSpeak(text){
+  const b = ov.querySelector('[data-speak]'); if (b) b.onclick = () => speak(text);
+}
+
+function openTalk(npc){
+  state.mode = 'talk'; SFX.talk();
+  if (npc.done){
+    showOv(`<div class="panel"><div class="talk">
+      <div class="who"><canvas class="portrait" width="18" height="18"></canvas><div class="nm">${Z(npc.name)}</div></div>
+      <div class="main"><div class="say">${Z('ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！ㄐㄧㄚ ㄧㄡˊ！')}</div><div class="han">謝謝你！加油！</div>
+        <div class="row" style="justify-content:flex-start">${spkBtn()}<button class="btn" data-primary data-focus>${Z('ㄏㄠˇ')}</button></div></div>
+    </div></div>`);
+    drawPortrait(npc.sprite); bindSpeak('謝謝你！加油！');
+    ov.querySelector('[data-primary]').onclick = closeTalk;
+    return;
+  }
+  const q = npc.qs[npc.qi];
+  const order = shuffle(q.opts.map((_, i) => i));
+  const sayZ = [npc.hi[0], q.say && q.say[0]].filter(Boolean);
+  const sayH = [npc.hi[1], q.say && q.say[1]].filter(Boolean);
+  showOv(`<div class="panel"><button class="x" data-close aria-label="離開">✕</button><div class="talk">
+    <div class="who"><canvas class="portrait" width="18" height="18"></canvas><div class="nm">${Z(npc.name)}</div><div class="han">${esc(npc.han)}</div></div>
+    <div class="main">
+      <div><div class="say">${sayZ.map(Z).join('<br>')}</div><div class="han">${esc(sayH.join(''))}</div></div>
+      <div class="ask">${q.pic ? `<div class="pic">${q.pic}</div>` : ''}
+        <div class="qwrap"><div class="q">${Z(q.q[0])}</div><div class="han">${esc(q.q[1])}</div></div>${spkBtn()}</div>
+      <div class="fb" aria-live="polite"></div>
+      <div class="opts">${order.map((oi, k) => `<button class="opt" data-i="${oi}" ${k === 0 ? 'data-focus' : ''}>
+        <span class="n">${k + 1}</span>${q.opts[oi][1] ? `<span class="e">${q.opts[oi][1]}</span>` : ''}<span class="zy">${Z(q.opts[oi][0], q.zyOnly ? false : q.opts[oi][2])}</span></button>`).join('')}</div>
+    </div></div></div>`);
+  drawPortrait(npc.sprite);
+  bindSpeak(sayH.join('') + q.q[1]);
+  ov.querySelector('[data-close]').onclick = closeTalk;
+  ov.querySelectorAll('.opt').forEach(b => b.onclick = () => answer(npc, b));
+}
+
+function answer(npc, b){
+  const fb = ov.querySelector('.fb');
+  if (b.dataset.i === '0'){
+    b.classList.add('ok'); SFX.ok();
+    ov.querySelectorAll('.opt').forEach(o => o.disabled = true);
+    fb.innerHTML = Z('ㄉㄚˊ ㄉㄨㄟˋ ˙ㄌㄜ！');
+    setTimeout(() => reward(npc), 700);
+  } else {
+    state.mistakes++; SFX.no();
+    b.classList.add('no'); b.disabled = true;
+    fb.innerHTML = Z('ㄗㄞˋ ㄒㄧㄤˇ ㄧ ㄒㄧㄤˇ！');
+    const next = ov.querySelector('.opt:not(:disabled)'); if (next) next.focus({ preventScroll:true });
+  }
+}
+
+function reward(npc){
+  SFX.item();
+  const it = npc.item;
+  showOv(`<div class="panel center-panel">
+    <div class="big">${it.e}</div>
+    <div class="headline">${Z('ㄉㄚˊ ㄉㄨㄟˋ ˙ㄌㄜ！')}</div>
+    <div class="say">${Z('ㄋㄧˇ ㄉㄜˊ ㄉㄠˋ')} <b style="color:var(--brick)">${Z(it.z)}</b></div>
+    <div class="han">答對了！你得到${esc(it.h)}</div>
+    <div class="row">${spkBtn()}<button class="btn" data-primary data-focus>${Z('ㄏㄠˇ')}</button></div>
+  </div>`, true);
+  bindSpeak('答對了！你得到' + it.h);
+  ov.querySelector('[data-primary]').onclick = () => {
+    npc.done = true; state.got.add(npc.idx); renderHud(npc.idx); SFX.blip();
+    if (state.got.size === L.npcs.length){ hideOv(); state.mode = 'busy'; setTimeout(levelClear, 450); }
+    else closeTalk();
+  };
+}
+
+function closeTalk(){ hideOv(); state.mode = 'play'; }
+
+function levelClear(){
+  SFX.clear();
+  const stars = state.mistakes === 0 ? 3 : state.mistakes <= 2 ? 2 : 1;
+  best[state.lv] = Math.max(best[state.lv] || 0, stars); save();
+  state.mode = 'clear';
+  const last = state.lv === LEVELS.length - 1;
+  showOv(`<div class="panel center-panel">
+    <div class="headline">${Z('ㄍㄨㄛˋ ㄍㄨㄢ ˙ㄌㄜ！')}</div>
+    <div class="big">${L.win[2]}</div>
+    <div class="say">${Z(L.win[0])}</div><div class="han">${esc(L.win[1])}</div>
+    <div class="stars" aria-label="${stars} 顆星">${starsHtml(stars)}</div>
+    ${last ? `<div class="say" style="color:var(--leaf)">${Z('ㄑㄩㄢˊ ㄅㄨˋ ㄨㄢˊ ㄔㄥˊ！ㄋㄧˇ ㄏㄠˇ ㄅㄤˋ！')}</div><div class="han">全部完成！你好棒！</div>` : ''}
+    <div class="row">
+      <button class="btn alt" data-again>${Z('ㄗㄞˋ ㄨㄢˊ ㄧ ㄘˋ')}</button>
+      ${last ? `<button class="btn" data-primary data-focus data-menu>${Z('ㄒㄩㄢˇ ㄍㄨㄢ')}</button>`
+             : `<button class="btn" data-primary data-focus data-next>${Z('ㄒㄧㄚˋ ㄧ ㄍㄨㄢ')} ▶</button>`}
+    </div>
+  </div>`, true);
+  ov.querySelector('[data-again]').onclick = () => startLevel(state.lv);
+  const nx = ov.querySelector('[data-next]'); if (nx) nx.onclick = () => startLevel(state.lv + 1);
+  const mn = ov.querySelector('[data-menu]'); if (mn) mn.onclick = showTitle;
+}
+
+/* ================= 移動 ================= */
+const DIRS = { u:[0,-1], d:[0,1], l:[-1,0], r:[1,0] };
+const SPEED = 2;
+function npcAt(x, y){ return npcs.find(n => n.x === x && n.y === y); }
+function tryMove(dir){
+  const [dx, dy] = DIRS[dir]; player.face = dir;
+  const nx = player.x + dx, ny = player.y + dy;
+  const n = npcAt(nx, ny);
+  if (n){ openTalk(n); return; }
+  if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || SOLID.has(grid[ny][nx])){
+    if (bumpCool <= 0){ SFX.bump(); bumpCool = 18; }
+    return;
+  }
+  Object.assign(player, { x:nx, y:ny, dx, dy, moving:true });
+}
+function update(){
+  if (bumpCool > 0) bumpCool--;
+  if (state.mode !== 'play') return;
+  if (L.type === 'shop'){ updateShop(); return; }
+  const p = player;
+  if (p.moving){
+    p.px += p.dx * SPEED; p.py += p.dy * SPEED; p.step++;
+    if (p.px === p.x * T && p.py === p.y * T) p.moving = false;
+  }
+  if (!p.moving && held.length) tryMove(held[held.length - 1]);
+}
+
+/* ================= 繪圖 ================= */
+function drawSprite(c, x, y, flip){
+  if (flip){ ctx.save(); ctx.translate(x + 18, y); ctx.scale(-1, 1); ctx.drawImage(c, 0, 0); ctx.restore(); }
+  else ctx.drawImage(c, x, y);
+}
+function draw(){
+  frame++;
+  if (L.type === 'shop'){ drawShop(); return; }
+  ctx.drawImage(bg, 0, 0);
+  const th = THEMES[L.theme], s = Math.floor(frame / 30) % 2;
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
+    if (grid[y][x] !== '~') continue;
+    const ox = x * T, oy = y * T;
+    P(ctx, ox + 2 + s * 4, oy + 4, th.wl, 4, 1); P(ctx, ox + 3 + s * 4, oy + 3, th.wl, 2, 1);
+    P(ctx, ox + 10 - s * 4, oy + 11, th.wl, 4, 1); P(ctx, ox + 11 - s * 4, oy + 10, th.wl, 2, 1);
+  }
+  if (L.theme === 'beach'){ // 浪花
+    for (let x = 0; x < COLS; x++) for (let y = 1; y < ROWS; y++){
+      if (grid[y][x] === ',' && grid[y - 1][x] === '~') P(ctx, x * T + ((x + s) % 2) * 4, y * T, '#ffffff', 8, 1);
+    }
+  }
+  const ents = npcs.map(n => ({ y:n.y * T, f:() => {
+    const bob = (Math.floor((frame + n.idx * 17) / 32) % 2);
+    drawSprite(SPR[n.sprite].front[0], n.x * T - 1, n.y * T - 2 - bob, false);
+    const bx = n.x * T + 4, by = n.y * T - 11 - bob;
+    if (!n.done){
+      const j = Math.floor(frame / 20) % 2;
+      P(ctx, bx, by - j, INK, 9, 10); P(ctx, bx + 1, by + 1 - j, '#ffffff', 7, 8);
+      P(ctx, bx + 4, by + 2 - j, '#e03030', 1, 4); P(ctx, bx + 4, by + 7 - j, '#e03030', 1, 1);
+    } else {
+      const hx = bx + 1, hy = by + 3;
+      P(ctx, hx + 1, hy, '#ff5a8c', 2, 1); P(ctx, hx + 4, hy, '#ff5a8c', 2, 1);
+      P(ctx, hx, hy + 1, '#ff5a8c', 7, 2); P(ctx, hx + 1, hy + 3, '#ff5a8c', 5, 1); P(ctx, hx + 2, hy + 4, '#ff5a8c', 3, 1); P(ctx, hx + 3, hy + 5, '#ff5a8c', 1, 1);
+    }
+  }}));
+  ents.push({ y:player.py, f:() => {
+    const fr = player.moving ? Math.floor(player.step / 4) % 2 : 0;
+    const set = player.face === 'u' ? SPR.player.back : SPR.player.front;
+    drawSprite(set[fr], player.px - 1, player.py - 2, player.face === 'l');
+  }});
+  ents.sort((a, b) => a.y - b.y).forEach(e => e.f());
+}
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+/* ================= 操作 ================= */
+const KEYMAP = { ArrowUp:'u', ArrowDown:'d', ArrowLeft:'l', ArrowRight:'r', w:'u', s:'d', a:'l', d:'r', W:'u', S:'d', A:'l', D:'r' };
+addEventListener('keydown', e => {
+  const dir = KEYMAP[e.key];
+  if (state.mode === 'play' && L.type === 'shop'){
+    if (dir){ e.preventDefault(); moveCursor(dir); }
+    else if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (shop.showCursor) pickItem(shop.cursor); else { shop.showCursor = true; } }
+    return;
+  }
+  if (state.mode === 'play'){
+    if (dir){ e.preventDefault(); if (!held.includes(dir)) held.push(dir); }
+    return;
+  }
+  if (ov.hidden) return;
+  if (/^[1-5]$/.test(e.key)){
+    const b = ov.querySelectorAll('.opt')[+e.key - 1];
+    if (b && !b.disabled){ e.preventDefault(); b.click(); }
+    return;
+  }
+  if (e.key === 'Escape' && state.mode === 'talk' && ov.querySelector('[data-close]')){ closeTalk(); return; }
+  if (e.key.startsWith('Arrow')){
+    const list = [...ov.querySelectorAll('button:not(:disabled)')].filter(b => !b.hasAttribute('data-close'));
+    if (!list.length) return;
+    e.preventDefault();
+    const i = list.indexOf(document.activeElement);
+    const step = (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ? -1 : 1;
+    list[(i + step + list.length) % list.length].focus({ preventScroll:true });
+    SFX.blip();
+    return;
+  }
+  if (e.key === 'Enter' || e.key === ' '){
+    const a = document.activeElement;
+    if (a && a.tagName === 'BUTTON' && ov.contains(a)) return; // 交給按鈕自己處理
+    const p = ov.querySelector('[data-primary]') || ov.querySelector('.lvcard');
+    if (p){ e.preventDefault(); p.click(); }
+  }
+});
+addEventListener('keyup', e => { const dir = KEYMAP[e.key]; if (dir) held = held.filter(d => d !== dir); });
+addEventListener('blur', () => { held = []; setPad(); });
+
+// 手機方向鍵
+const pad = $('pad');
+function setPad(){ pad.querySelectorAll('button').forEach(b => b.classList.toggle('on', held.includes(b.dataset.dir))); }
+pad.querySelectorAll('button').forEach(b => {
+  const dir = b.dataset.dir;
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault(); audio();
+    if (state.mode !== 'play') return;
+    if (L.type === 'shop'){ moveCursor(dir); return; }
+    held = held.filter(d => d !== dir); held.push(dir); setPad();
+    try { b.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  const up = () => { held = held.filter(d => d !== dir); setPad(); };
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+
+// 超商：點畫面上的商品、或用方向鍵移動框框
+function moveCursor(dir){
+  const [dx, dy] = DIRS[dir];
+  if (shop.showCursor){
+    const c = (shop.cursor % 7 + dx + 7) % 7, r = (Math.floor(shop.cursor / 7) + dy + 3) % 3;
+    shop.cursor = r * 7 + c;
+  }
+  shop.showCursor = true; SFX.blip();
+}
+function canvasCell(e){
+  const r = cv.getBoundingClientRect();
+  return cellAt((e.clientX - r.left) / r.width * 256, (e.clientY - r.top) / r.height * 192);
+}
+cv.addEventListener('pointerdown', e => {
+  audio();
+  if (L.type !== 'shop' || state.mode !== 'play') return;
+  const i = canvasCell(e);
+  if (i >= 0){ shop.cursor = i; pickItem(i); }
+});
+cv.addEventListener('pointermove', e => {
+  if (L.type !== 'shop' || e.pointerType !== 'mouse') return;
+  const i = canvasCell(e);
+  cv.style.cursor = i >= 0 ? 'pointer' : 'default';
+  if (i >= 0){ shop.cursor = i; shop.showCursor = true; }
+});
+$('sbSpk').onclick = () => speak(shop.speech || '');
+if (!canSpeak) $('sbSpk').hidden = true;
+document.querySelectorAll('[data-zy]').forEach(el => { el.innerHTML = Z(el.dataset.zy); });
+
+// 上方按鈕
+let showHz = true;
+try { showHz = localStorage.getItem('bpm-hz') !== '0'; } catch (e) {}
+function applyHan(){ document.body.classList.toggle('no-hz', !showHz); $('btnHan').setAttribute('aria-pressed', String(showHz)); }
+applyHan();
+$('btnHan').onclick = () => { showHz = !showHz; applyHan(); try { localStorage.setItem('bpm-hz', showHz ? '1' : '0'); } catch (e) {} };
+$('btnSnd').onclick = () => {
+  muted = !muted; const b = $('btnSnd');
+  b.setAttribute('aria-pressed', String(!muted)); b.textContent = muted ? '🔇 音效' : '🔊 音效';
+  if (!muted) SFX.blip();
+};
+$('btnMenu').onclick = () => { if (canSpeak) speechSynthesis.cancel(); showTitle(); };
+addEventListener('pointerdown', () => audio(), { once:true });
+if (canSpeak) try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {}
+
+/* ================= 開始 ================= */
+const hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) try { hot.snapshot(() => ({ lv:state.lv, got:[...state.got], mode:state.mode })); } catch (e) {}
+function start(data){
+  if (data && typeof data.lv === 'number' && (data.mode === 'play' || data.mode === 'talk') && LEVELS[data.lv]){
+    if (LEVELS[data.lv].type === 'shop') startLevel(data.lv);
+    else { loadLevel(data.lv, data.got); state.mode = 'play'; }
+  } else showTitle();
+  loop();
+}
+if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>
