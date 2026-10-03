@@ -37,7 +37,20 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
 .chip:focus-visible,.btn:focus-visible,.lvcard:focus-visible,.spk:focus-visible,.x:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
 
 .hud{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--night);color:#fff;border:4px solid var(--ink);padding:8px 12px;min-height:56px}
-.lvname{font-weight:900;font-size:18px;display:flex;align-items:center;gap:8px}
+.lvname{font-family:var(--f-zy);font-weight:900;font-size:18px;display:flex;align-items:center;gap:8px;color:#fff;background:none;border:2px dashed transparent;padding:2px 6px;cursor:pointer}
+.lvname:hover,.lvname:focus-visible{border-color:var(--gold);outline:none}
+.lvname .info{font-family:var(--f-px);font-size:10px;color:var(--ink);background:var(--gold);border:2px solid #fff;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center}
+/* 遊戲說明視窗 */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(18,20,60,.6);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.help-panel{max-width:640px;display:flex;flex-direction:column;gap:14px}
+.help-title{font-size:clamp(20px,3vw,26px);font-weight:900;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.help-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.help-list li{display:flex;align-items:center;gap:12px;font-weight:700;font-size:clamp(18px,2.6vw,22px)}
+.help-list .ico{flex:none;min-width:56px;text-align:center;font-size:26px}
+.parent{border-top:3px dashed var(--ink);padding-top:10px;color:var(--muted);font-size:14px;line-height:1.7}
+.parent h3{margin:0 0 4px;font-size:15px;color:var(--ink)}
+.parent p{margin:0 0 6px}
+.help-panel .row{justify-content:flex-end}
 .lvname .tag{font-family:var(--f-px);font-size:10px;background:var(--brick);padding:5px 6px;border:2px solid #fff}
 .slots{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
 .slot{display:flex;align-items:center;gap:6px;background:#34365e;border:2px solid #6a6ea8;padding:3px 8px;font-size:14px;font-weight:700}
@@ -58,13 +71,14 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
   box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 6px var(--gold),6px 6px 0 rgba(0,0,0,.35);padding:16px 18px}
 [hidden]{display:none!important}
 /* 直式注音 */
-.sy{display:inline-flex;align-items:flex-end;vertical-align:middle;margin:.1em .1em;line-height:1}
+.sy{display:inline-flex;align-items:flex-end;vertical-align:middle;margin:.1em .1em;padding-right:.36em;line-height:1}
 .sy .col{display:inline-flex;flex-direction:column;align-items:center}
-.sy b{display:block;font-weight:inherit;font-size:.62em;line-height:1.04}
+.sy b{position:relative;display:block;font-weight:inherit;font-size:.62em;line-height:1.04}
 .sy .dot{display:block;font-style:normal;font-size:.55em;line-height:.55}
 .ru .sy .dot{font-size:.7em}
-.sy .tn{display:block;font-size:.55em;width:.45em;margin-bottom:.26em;line-height:1}
-.ru .sy .tn{font-size:.72em;width:.5em;margin-bottom:.32em}
+/* 聲調：放在最後一個注音符號的右上方 */
+.sy .tn{position:absolute;left:100%;top:-.12em;margin-left:.02em;font-style:normal;font-size:.8em;line-height:1}
+.sy.m .tn{top:-.5em} /* 兩個以上符號：聲調在最後兩個符號之間的右邊 */
 .pu{display:inline-block;vertical-align:middle;margin-inline:.05em}
 .shopbar{display:flex;align-items:center;gap:12px;background:var(--paper);border:4px solid var(--ink);padding:8px 12px;min-height:96px}
 .shopbar .main{gap:2px}
@@ -75,7 +89,7 @@ body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-zy);
 .han{display:none}
 /* 國字＋注音 */
 .ru{display:inline-flex;align-items:center;vertical-align:middle;margin:.06em .04em}
-.ru .hz{display:block;font-size:1.55em;line-height:1.1;color:var(--hz)}
+.ru .hz{display:block;font-size:1.7em;line-height:1.1;color:var(--hz)}
 .ru .sy{font-size:.44em;margin:0 0 0 .14em}
 .ru .sy b{font-size:1em;line-height:1.08}
 /* 有底色或特別顏色的地方，國字跟著原本的文字顏色 */
@@ -95,6 +109,8 @@ body.no-hz .ru .sy b{font-size:.8em}
 .pic{font-size:52px;line-height:1}
 .q{font-size:clamp(22px,3.2vw,30px);font-weight:900;color:var(--brick);line-height:1.5}
 .spk{flex:none;font-family:var(--f-zy);font-weight:700;font-size:15px;background:var(--gold);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:6px 9px;cursor:pointer}
+/* 「聽」預設關閉，上方開啟後才顯示朗讀按鈕 */
+body:not(.tts-on) .spk{display:none!important}
 .spk:active{transform:translateY(3px);box-shadow:none}
 .fb{min-height:1.5em;font-weight:900;font-size:18px;color:var(--brick)}
 .fb:empty{display:none}
@@ -124,26 +140,50 @@ body.no-hz .ru .sy b{font-size:.8em}
 .stars{font-size:40px;letter-spacing:6px;color:var(--gold);-webkit-text-stroke:2px var(--ink)}
 .stars .off{color:#d8d4c0}
 .items{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.items .it{background:#fff;border:3px solid var(--ink);padding:4px 10px;font-weight:700;font-size:17px}
-.items .it span:first-child{font-size:22px;margin-right:4px}
+.items .it{background:#fff;border:3px solid var(--ink);padding:4px 12px;font-weight:700;font-size:21px}
+.items .it > span:first-child{font-size:22px;margin-right:4px}
 .intro-head{display:flex;align-items:center;gap:12px;text-align:left}
 .intro-lines{font-size:clamp(19px,2.8vw,25px);font-weight:700;line-height:1.6;text-align:left}
 .eyebrow{font-weight:900;font-size:15px;color:var(--muted)}
 
-.title-logo{font-size:clamp(30px,6vw,52px);font-weight:900;color:#fff;line-height:1.2;
+.title-logo{font-size:clamp(22px,3.6vw,32px);font-weight:900;color:#fff;line-height:1.2;
   text-shadow:3px 0 0 var(--ink),-3px 0 0 var(--ink),0 3px 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),6px 6px 0 rgba(0,0,0,.3)}
-.title-logo .b{color:var(--gold)}
+.title-logo .b{color:var(--gold);font-size:1.5em}
+.title-logo .sy{text-shadow:none;color:var(--ink)}
 .lvs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
-.lvcard{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--f-zy);color:var(--ink);background:#fff;border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);padding:10px 6px;cursor:pointer}
+.lvcard{display:flex;flex-direction:row;align-items:center;gap:12px;text-align:left;font-family:var(--f-zy);color:var(--ink);background:#fff;border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);padding:10px 6px;cursor:pointer}
 .lvcard:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
 .lvcard .em{font-size:40px;line-height:1.1}
 .lvcard .no{font-weight:700;font-size:14px;color:var(--muted)}
-.lvcard .nm{font-weight:900;font-size:19px}
-.lvcard .st{color:var(--gold);font-size:18px;-webkit-text-stroke:1px var(--ink);letter-spacing:2px}
+.lvcard .nm{font-weight:900;font-size:18px}
+.lvcard .st{margin-left:auto;color:var(--gold);font-size:18px;-webkit-text-stroke:1px var(--ink);letter-spacing:2px}
 .lvcard .st .off{color:#e2dfcf}
 .press{font-family:var(--f-px);font-size:10px;color:var(--muted);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
 
+/* 小鎮地圖：四角招牌＋中間的區域介紹 */
+.town{position:absolute;inset:0;pointer-events:none}
+.sign{position:absolute;pointer-events:auto;display:flex;align-items:center;gap:8px;font-family:var(--f-zy);font-weight:900;font-size:17px;color:#fff;background:#a0643c;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px #c88a52;padding:4px 10px;cursor:pointer}
+.sign .hz{color:inherit}
+.sign .em{font-size:22px}
+.sign .st{color:var(--gold);font-size:13px;-webkit-text-stroke:1px var(--ink)}
+.sign .st .off{color:#e2c8a8}
+.sign:hover,.sign:focus-visible{background:#c87c3c;transform:translateY(-2px);outline:3px solid var(--gold)}
+.sign.tl{left:2%;top:3%}.sign.tr{right:2%;top:3%}.sign.bl{left:2%;bottom:3%}.sign.br{right:2%;bottom:3%}
+.tip{position:absolute;width:min(46%,340px);background:var(--paper);border:4px solid var(--ink);box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 6px var(--gold),6px 6px 0 rgba(0,0,0,.35);padding:10px 12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:16px}
+.tip.tl{left:2%;top:calc(3% + 54px)}.tip.tr{right:2%;top:calc(3% + 54px)}.tip.bl{left:2%;bottom:calc(3% + 54px)}.tip.br{right:2%;bottom:calc(3% + 54px)}
+.tip-head{display:flex;align-items:center;gap:8px}
+.tip-head .st{margin-left:auto;color:var(--gold);font-size:16px;-webkit-text-stroke:1px var(--ink)}
+.tip-head .st .off{color:#e2dfcf}
+.tip-big{font-size:34px;line-height:1}
+.tip-name{font-weight:900;font-size:20px}
+.tip-blurb{font-weight:700;font-size:17px;line-height:1.5}
+.tip-goal{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:24px}
+.tip-goal .it{font-size:16px;font-weight:700;background:#fff;border:2px solid var(--ink);padding:2px 8px}
+.tip-go{font-weight:900;color:var(--brick);font-size:15px}
+.tip-go .hz{color:inherit}
+.hud-hint{font-weight:900;font-size:16px}
+@media (max-width:640px){.sign{font-size:12px;padding:2px 6px;gap:4px}.sign .em{font-size:16px}.sign .st{display:none}.tip{display:none!important}}
 .pad{display:none;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:4px;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none}
 .pad button{font-size:26px;background:var(--paper);border:4px solid var(--ink);box-shadow:0 4px 0 var(--ink);color:var(--ink);touch-action:none;cursor:pointer}
 .pad button:active,.pad button.on{transform:translateY(4px);box-shadow:none;background:var(--gold)}
@@ -173,13 +213,14 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
     <h1 class="logo"><span class="b">ㄅㄆㄇ</span> 小冒險</h1>
     <div class="tools">
       <button class="chip" id="btnHan" aria-pressed="true" title="國字開關：關掉就只看注音">國字</button>
+      <button class="chip" id="btnTts" aria-pressed="false" title="開啟後，題目旁會出現「🔊聽」按鈕，可以朗讀">👂 聽</button>
       <button class="chip" id="btnSnd" aria-pressed="true" title="音效開關">🔊 音效</button>
-      <button class="chip" id="btnMenu" title="回到選關">選關</button>
+      <button class="chip" id="btnMenu" title="回到小鎮地圖（主畫面）">🏠 選關</button>
     </div>
   </header>
 
   <div class="hud" id="hud">
-    <div class="lvname" id="lvname"><span class="tag">LV 1</span><span></span></div>
+    <button class="lvname" id="lvname" title="點一下看遊戲說明"><span class="tag">LV 1</span><span></span></button>
     <div class="slots" id="slots"></div>
   </div>
 
@@ -191,6 +232,7 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
 
   <div class="stage" id="stage">
     <canvas id="game" width="256" height="192" aria-label="遊戲地圖"></canvas>
+    <div class="town" id="town" hidden></div>
     <div class="ov" id="ov" hidden></div>
   </div>
 
@@ -201,9 +243,8 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
     <button class="d" data-dir="d" aria-label="下">▼</button>
   </div>
 
-  <div class="help">
-    <div class="zy"><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <span data-zy="ㄗㄡˇ ㄌㄨˋ"></span>　·　<span data-zy="ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ"></span>　·　<kbd>1</kbd>–<kbd>5</kbd> <span data-zy="ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ"></span></div>
-    <p>給家長：前三關用方向鍵（或 WASD、手機下方方向鍵）走路，碰到頭上有「!」的角色就會出一題注音題，答對就拿到物資，四樣都拿到就過關。第四關「便利商店」裡小孩當店員，客人問商品在哪裡，直接在畫面上點商品（或用方向鍵移動框框、按 Enter），答對 10 題過關。國字預設顯示在注音左邊，按「國字」可關掉只看注音（故意寫錯音的辨音題選項本來就只有注音），按「🔊」會用瀏覽器朗讀。</p>
+  <div class="modal" id="helpModal" hidden role="dialog" aria-modal="true" aria-label="遊戲說明">
+    <div class="panel help-panel" id="helpBody"></div>
   </div>
 </div>
 
@@ -883,7 +924,8 @@ SHOP_ITEMS.forEach(it => addHz(it[1], it[2]));
  ['ㄒㄩㄢˇ ㄍㄨㄢ','選關'],['ㄒㄧㄚˋ ㄧ ㄍㄨㄢ','下一關'],['ㄉㄚˊ ㄉㄨㄟˋ','答對'],['ㄊㄧˊ','題'],['ㄉㄧㄢˇ ㄕㄤ ㄆㄧㄣˇ','點商品'],
  ['ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！ㄐㄧㄚ ㄧㄡˊ！','謝謝你！加油！'],['ㄏㄨㄢ ㄧㄥˊ ㄍㄨㄤ ㄌㄧㄣˊ！','歡迎光臨！'],
  ['ㄉㄨㄟˋ ˙ㄌㄜ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！','對了！謝謝你！'],['ㄗㄡˇ ㄌㄨˋ','走路'],
- ['ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','碰到人就可以說話'],['ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ','選答案']
+ ['ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','碰到人就可以說話'],['ㄒㄧㄠˇ ㄓㄣˋ','小鎮'],
+ ['ㄒㄩㄢˇ ㄧ ˙ㄍㄜ ㄉㄧˋ ㄈㄤ ˙ㄅㄚ！','選一個地方吧！'],['ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄣˋ ㄖㄨˋ','點一下進入'],['ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ','選答案']
 ].forEach(([z, h]) => addHz(z, h));
 
 // 國字＋直式注音：國字在左，注音由上往下排在右邊，聲調在注音右邊，輕聲點在最上面。
@@ -910,7 +952,7 @@ const Z = (s, han) => {
   let k = 0;
   return toks.map(t => {
     if (t.pu) return `<span class="pu">${esc(t.pu)}</span>`;
-    const sy = `<span class="sy"><span class="col">${t.dot ? '<i class="dot">˙</i>' : ''}${[...t.letters].map(c => `<b>${c}</b>`).join('')}</span>${t.tone ? `<span class="tn">${t.tone}</span>` : ''}</span>`;
+    const sy = `<span class="sy${[...t.letters].length > 1 ? " m" : ""}"><span class="col">${t.dot ? '<i class="dot">˙</i>' : ''}${[...t.letters].map((c, i, a) => `<b>${c}${t.tone && i === a.length - 1 ? `<i class="tn">${t.tone}</i>` : ''}</b>`).join('')}</span></span>`;
     return pair ? `<span class="ru"><span class="hz">${esc(chars[k++])}</span>${sy}</span>` : sy;
   }).join('');
 };
@@ -920,6 +962,7 @@ const starsHtml = n => [0,1,2].map(i => `<span class="${i < n ? '' : 'off'}">★
 function loadLevel(i, got){
   state.lv = i; L = LEVELS[i]; state.mistakes = 0;
   state.got = new Set(got || []);
+  $('town').hidden = true;
   sbar().hidden = L.type !== 'shop';
   if (L.type === 'shop'){ grid = []; npcs = []; bg = renderShopBg(); setupShop(); renderHud(); return; }
   grid = L.map.map(r => r.padEnd(COLS, '.').slice(0, COLS).split(''));
@@ -939,7 +982,7 @@ function loadLevel(i, got){
 }
 
 function renderHud(popIdx){
-  $('lvname').innerHTML = `<span class="tag">LV ${state.lv + 1}</span><span>${Z(L.name)}</span>`;
+  $('lvname').innerHTML = `<span class="tag">LV ${state.lv + 1}</span><span>${Z(L.name)}</span><span class="info" aria-hidden="true">?</span>`;
   if (L.type === 'shop'){
     $('slots').innerHTML = `<div class="slot got ${popIdx ? 'pop' : ''}"><span class="ic">🛍️</span><span class="nm">${Z('ㄉㄚˊ ㄉㄨㄟˋ')} <b>${shop.correct}</b> / ${L.need}</span></div>
       <div class="pips" aria-hidden="true">${Array.from({ length:L.need }, (_, i) => `<i class="${i < shop.correct ? 'on' : ''}"></i>`).join('')}</div>`;
@@ -964,21 +1007,143 @@ function drawPortrait(name){
 }
 const spkBtn = () => canSpeak ? `<button class="spk" data-speak>🔊 ${Z('ㄊㄧㄥ')}</button>` : '';
 
+/* ---------- 主畫面：小鎮地圖 ---------- */
+// 四個區域（圖塊座標），順序跟 LEVELS 一樣：農場、海邊、森林、便利商店
+const ZONES = [
+  { x0:0, y0:0, x1:6,  y1:4,  pos:'tl' },
+  { x0:9, y0:0, x1:15, y1:4,  pos:'tr' },
+  { x0:0, y0:7, x1:6,  y1:11, pos:'bl' },
+  { x0:9, y0:7, x1:15, y1:11, pos:'br' }];
+const BLURB = [
+  ['ㄅㄤ ㄇㄚ ˙ㄇㄚ ㄓㄠˇ ㄗㄨㄛˋ ㄉㄢˋ ㄍㄠ ˙ㄉㄜ ㄘㄞˊ ㄌㄧㄠˋ','幫媽媽找做蛋糕的材料'],
+  ['ㄅㄤ ㄍㄜ ˙ㄍㄜ ㄓㄠˇ ㄉㄨㄟ ㄕㄚ ㄅㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','幫哥哥找堆沙堡的東西'],
+  ['ㄓㄠˇ ㄌㄨˋ ㄧㄥˊ ㄧㄠˋ ㄩㄥˋ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ','找露營要用的東西'],
+  ['ㄉㄤ ㄉㄧㄢˋ ㄩㄢˊ，ㄅㄤ ㄎㄜˋ ㄖㄣˊ ㄓㄠˇ ㄕㄤ ㄆㄧㄣˇ','當店員，幫客人找商品']];
+BLURB.forEach(b => addHz(b[0], b[1]));
+const TOWN_MAP = [
+  '##.H.*.==,,~~~~~',
+  '#.cccc.==.,,~~~~',
+  '..cccc.==T.,,~~~',
+  '*......==..,,,~~',
+  '#.*..#.==T..,,,~',
+  '================',
+  '================',
+  '#..#.##==ppppppp',
+  '#.#..#.==pSSSSp#',
+  '..#.#..==pSSSSpp',
+  '#..*.#.==ppppppp',
+  '##.#.##==#ppppp#'];
+const TOWN_DECOR = [
+  { s:'hen', x:4, y:3 }, { s:'crab', x:10, y:3 }, { s:'bear', x:4, y:9 }, { s:'clerk', x:11, y:10 }];
+THEMES.town = { ...THEMES.farm, g:'#d6d2c8', gd:'#c4beb2', gl:'#e8e4da', tuft:false };
+let townBg = null, townSel = -1;
+
+function zoneAt(tx, ty){ return ZONES.findIndex(z => tx >= z.x0 && tx <= z.x1 && ty >= z.y0 && ty <= z.y1); }
+function renderTownBg(){
+  const c = document.createElement('canvas'); c.width = 256; c.height = 192;
+  const g = c.getContext('2d');
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
+    const ch = TOWN_MAP[y][x], ox = x * T, oy = y * T;
+    const z = zoneAt(x, y), th = THEMES[['farm','beach','forest','town'][z]] || THEMES.farm;
+    if (ch === '='){ // 柏油路，路中間畫黃色虛線
+      P(g, ox, oy, '#6c6c7c', 16, 16);
+      for (let i = 0; i < 4; i++) P(g, ox + ri(x,y,i+5,16), oy + ri(x,y,i+9,16), '#7a7a8c');
+      const horiz = y === 5 || y === 6, vert = x === 7 || x === 8;
+      if (horiz && !vert && y === 5) P(g, ox + 4, oy + 15, '#fcd000', 8, 2);
+      if (vert && !horiz && x === 7) P(g, ox + 15, oy + 4, '#fcd000', 2, 8);
+      continue;
+    }
+    if (ch === 'p' || ch === 'S'){
+      P(g, ox, oy, '#d6d2c8', 16, 16); P(g, ox, oy, '#bdb8ac', 16, 1); P(g, ox, oy, '#bdb8ac', 1, 16);
+      continue;
+    }
+    if (ch === 'c'){ // 菜園
+      P(g, ox, oy, '#8c5a2c', 16, 16);
+      for (let r = 0; r < 4; r++){ P(g, ox, oy + r * 4 + 3, '#6c4420', 16, 1); for (let k = 0; k < 4; k++) P(g, ox + k * 4 + 1 + (r % 2), oy + r * 4, '#5cc83c', 2, 2); }
+      continue;
+    }
+    switch (ch){
+      case '#': case 'T': (th.tree === 'pine' ? pine : th.tree === 'palm' ? palm : roundTree)(g, ox, oy, x, y, th); break;
+      case '~': water(g, ox, oy, th); break;
+      case '*': flower(g, ox, oy, x, y, th); break;
+      case 'H': house(g, ox, oy, x, y, th); break;
+      case ',': shore(g, ox, oy, x, y, th); break;
+      default: ground(g, ox, oy, x, y, th);
+    }
+  }
+  // 便利商店建築（4×2 格）
+  const sx = 10 * T, sy = 8 * T;
+  P(g, sx, sy, INK, 64, 32); P(g, sx + 1, sy + 1, '#f6eedc', 62, 30);
+  P(g, sx + 1, sy + 1, '#ff8c1a', 62, 3); P(g, sx + 1, sy + 4, '#2c9c4c', 62, 3); P(g, sx + 1, sy + 7, '#e83c3c', 62, 2);
+  P(g, sx + 4, sy + 12, INK, 22, 16); P(g, sx + 5, sy + 13, '#9cd8f4', 20, 14);
+  P(g, sx + 38, sy + 12, INK, 22, 16); P(g, sx + 39, sy + 13, '#9cd8f4', 20, 14);
+  for (let k = 0; k < 5; k++){ P(g, sx + 7 + k, sy + 15 + k, '#e6f6ff'); P(g, sx + 41 + k, sy + 15 + k, '#e6f6ff'); }
+  P(g, sx + 27, sy + 13, INK, 10, 19); P(g, sx + 28, sy + 14, '#bfe3f5', 8, 18); P(g, sx + 31, sy + 14, INK, 1, 18);
+  return c;
+}
+
 function showTitle(){
+  if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
+  hideOv();
   state.mode = 'title';
-  loadLevel(0);
-  showOv(`<div class="panel center-panel">
-    <div class="title-logo"><span class="b">ㄅㄆㄇ</span><br>${Z('ㄒㄧㄠˇ ㄇㄠˋ ㄒㄧㄢˇ')}</div>
-    <div class="say">${Z('ㄒㄩㄢˇ ㄧ ㄍㄨㄢ ˙ㄅㄚ！')}</div>
-    <div class="lvs">${LEVELS.map((lv, i) => `
-      <button class="lvcard" data-lv="${i}" ${i === 0 ? 'data-focus' : ''}>
-        <span class="em">${lv.emoji}</span>
-        <span><span class="no">${Z(LV_NO[i])}</span><br><span class="nm">${Z(lv.name)}</span></span>
-        <span class="st">${starsHtml(best[i] || 0)}</span>
-      </button>`).join('')}</div>
-    <div class="press">PRESS ENTER</div>
-  </div>`, true);
-  ov.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { SFX.blip(); startLevel(+b.dataset.lv); });
+  L = LEVELS[0]; npcs = []; sbar().hidden = true;
+  if (!townBg) townBg = renderTownBg();
+  townSel = -1;
+  $('lvname').innerHTML = `<span class="tag">MAP</span><span>${Z('ㄒㄧㄠˇ ㄓㄣˋ')}</span><span class="info" aria-hidden="true">?</span>`;
+  $('slots').innerHTML = `<span class="hud-hint">${Z('ㄒㄩㄢˇ ㄧ ˙ㄍㄜ ㄉㄧˋ ㄈㄤ ˙ㄅㄚ！')}</span>`;
+  const town = $('town');
+  town.innerHTML = LEVELS.map((lv, i) => `
+    <button class="sign ${ZONES[i].pos}" data-zone="${i}">
+      <span class="em">${lv.emoji}</span><span class="nm">${Z(lv.name)}</span><span class="st">${starsHtml(best[i] || 0)}</span>
+    </button>`).join('') + `<div class="tip" id="townTip" hidden></div>`;
+  town.hidden = false;
+  town.querySelectorAll('[data-zone]').forEach(b => {
+    b.onclick = () => enterZone(+b.dataset.zone);
+    b.onmouseenter = b.onfocus = () => selectZone(+b.dataset.zone, true);
+    b.onmouseleave = () => selectZone(-1);
+  });
+}
+function selectZone(i, quiet){
+  if (i === townSel) return;
+  townSel = i;
+  const tip = $('townTip'); if (!tip) return;
+  if (i < 0){ tip.hidden = true; return; }
+  if (!quiet) SFX.blip();
+  const lv = LEVELS[i];
+  const goal = lv.type === 'shop'
+    ? `<span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${lv.need} ${Z('ㄊㄧˊ')}</span>`
+    : lv.npcs.map(n => `<span class="tip-em" title="${esc(n.item.h)}">${n.item.e}</span>`).join('');
+  tip.innerHTML = `<div class="tip-head"><span class="tip-big">${lv.emoji}</span>
+      <div><div class="eyebrow">${Z(LV_NO[i])}</div><div class="tip-name">${Z(lv.name)}</div></div>
+      <span class="st">${starsHtml(best[i] || 0)}</span></div>
+    <div class="tip-blurb">${Z(BLURB[i][0])}</div>
+    <div class="tip-goal">${goal}</div>
+    <div class="tip-go">👆 ${Z('ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄣˋ ㄖㄨˋ')}</div>`;
+  tip.className = 'tip ' + ZONES[i].pos;
+  tip.hidden = false;
+}
+function enterZone(i){
+  if (i < 0) return;
+  SFX.blip(); $('town').hidden = true; townSel = -1;
+  startLevel(i);
+}
+function drawTown(){
+  ctx.drawImage(townBg, 0, 0);
+  const s = Math.floor(frame / 30) % 2, th = THEMES.beach;
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++){
+    if (TOWN_MAP[y][x] !== '~') continue;
+    P(ctx, x * T + 2 + s * 4, y * T + 4, th.wl, 4, 1); P(ctx, x * T + 10 - s * 4, y * T + 11, th.wl, 4, 1);
+  }
+  TOWN_DECOR.forEach((d, k) => {
+    const bob = Math.floor((frame + k * 13) / 32) % 2;
+    drawSprite(SPR[d.s].front[0], d.x * T - 1, d.y * T - 2 - bob, false);
+  });
+  drawSprite(SPR.player.front[0], 7 * T + 7, 5 * T + 6, false);
+  if (townSel >= 0){
+    const z = ZONES[townSel], col = Math.floor(frame / 12) % 2 ? '#fcbc3c' : '#ffffff';
+    const x = z.x0 * T, y = z.y0 * T, w = (z.x1 - z.x0 + 1) * T, h = (z.y1 - z.y0 + 1) * T;
+    P(ctx, x, y, col, w, 3); P(ctx, x, y + h - 3, col, w, 3); P(ctx, x, y, col, 3, h); P(ctx, x + w - 3, y, col, 3, h);
+  }
 }
 
 function startLevel(i){
@@ -1114,6 +1279,7 @@ function tryMove(dir){
 }
 function update(){
   if (bumpCool > 0) bumpCool--;
+  if (helpOpen) return;
   if (state.mode !== 'play') return;
   if (L.type === 'shop'){ updateShop(); return; }
   const p = player;
@@ -1131,6 +1297,7 @@ function drawSprite(c, x, y, flip){
 }
 function draw(){
   frame++;
+  if (state.mode === 'title'){ drawTown(); return; }
   if (L.type === 'shop'){ drawShop(); return; }
   ctx.drawImage(bg, 0, 0);
   const th = THEMES[L.theme], s = Math.floor(frame / 30) % 2;
@@ -1171,7 +1338,17 @@ function loop(){ update(); draw(); requestAnimationFrame(loop); }
 /* ================= 操作 ================= */
 const KEYMAP = { ArrowUp:'u', ArrowDown:'d', ArrowLeft:'l', ArrowRight:'r', w:'u', s:'d', a:'l', d:'r', W:'u', S:'d', A:'l', D:'r' };
 addEventListener('keydown', e => {
+  if (helpOpen){ if (e.key === 'Escape') closeHelp(); return; }
   const dir = KEYMAP[e.key];
+  if (state.mode === 'title'){
+    if (dir){
+      e.preventDefault();
+      const [dx, dy] = DIRS[dir];
+      if (townSel < 0) selectZone(0);
+      else selectZone(((townSel % 2 + dx + 2) % 2) + ((Math.floor(townSel / 2) + dy + 2) % 2) * 2);
+    } else if ((e.key === 'Enter' || e.key === ' ') && townSel >= 0 && !(document.activeElement && document.activeElement.dataset.zone)){ e.preventDefault(); enterZone(townSel); }
+    return;
+  }
   if (state.mode === 'play' && L.type === 'shop'){
     if (dir){ e.preventDefault(); moveCursor(dir); }
     else if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (shop.showCursor) pickItem(shop.cursor); else { shop.showCursor = true; } }
@@ -1240,11 +1417,24 @@ function canvasCell(e){
 }
 cv.addEventListener('pointerdown', e => {
   audio();
+  if (state.mode === 'title'){ const t = canvasTile(e); enterZone(zoneAt(t.x, t.y)); return; }
   if (L.type !== 'shop' || state.mode !== 'play') return;
   const i = canvasCell(e);
   if (i >= 0){ shop.cursor = i; pickItem(i); }
 });
+function canvasTile(e){
+  const r = cv.getBoundingClientRect();
+  return { x: Math.floor((e.clientX - r.left) / r.width * COLS), y: Math.floor((e.clientY - r.top) / r.height * ROWS) };
+}
+cv.addEventListener('pointerleave', () => { if (state.mode === 'title') selectZone(-1); });
 cv.addEventListener('pointermove', e => {
+  if (state.mode === 'title'){
+    if (e.pointerType !== 'mouse') return;
+    const t = canvasTile(e), z = zoneAt(t.x, t.y);
+    cv.style.cursor = z >= 0 ? 'pointer' : 'default';
+    selectZone(z);
+    return;
+  }
   if (L.type !== 'shop' || e.pointerType !== 'mouse') return;
   const i = canvasCell(e);
   cv.style.cursor = i >= 0 ? 'pointer' : 'default';
@@ -1260,6 +1450,51 @@ try { showHz = localStorage.getItem('bpm-hz') !== '0'; } catch (e) {}
 function applyHan(){ document.body.classList.toggle('no-hz', !showHz); $('btnHan').setAttribute('aria-pressed', String(showHz)); }
 applyHan();
 $('btnHan').onclick = () => { showHz = !showHz; applyHan(); try { localStorage.setItem('bpm-hz', showHz ? '1' : '0'); } catch (e) {} };
+// 遊戲說明視窗：點上方關卡名稱打開，內容依目前畫面而定
+let helpOpen = false;
+const HELP_KID = {
+  map:[['🗺️','ㄒㄩㄢˇ ㄧ ˙ㄍㄜ ㄉㄧˋ ㄈㄤ ˙ㄅㄚ！','選一個地方吧！'],['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄣˋ ㄖㄨˋ','點一下進入']],
+  walk:[['<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>','ㄩㄥˋ ㄈㄤ ㄒㄧㄤˋ ㄐㄧㄢˋ ㄗㄡˇ ㄌㄨˋ','用方向鍵走路'],
+        ['❗','ㄆㄥˋ ㄉㄠˋ ㄖㄣˊ ㄐㄧㄡˋ ㄎㄜˇ ㄧˇ ㄕㄨㄛ ㄏㄨㄚˋ','碰到人就可以說話'],
+        ['<kbd>1</kbd>–<kbd>5</kbd>','ㄒㄩㄢˇ ㄉㄚˊ ㄢˋ','選答案'],
+        ['🎁','ㄉㄚˊ ㄉㄨㄟˋ ㄐㄧㄡˋ ㄋㄚˊ ㄉㄠˋ ㄉㄨㄥ ˙ㄒㄧ','答對就拿到東西'],
+        ['⭐','ㄙˋ ㄧㄤˋ ㄉㄨㄥ ˙ㄒㄧ ㄋㄚˊ ㄉㄠˋ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','四樣東西拿到就過關']],
+  shop:[['🧑','ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄨㄣˋ ㄋㄧˇ ㄉㄨㄥ ˙ㄒㄧ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ。','客人會問你東西在哪裡。'],
+        ['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄨㄟˋ ˙ㄉㄜ ㄕㄤ ㄆㄧㄣˇ','點一下對的商品'],
+        ['⭐','ㄉㄚˊ ㄉㄨㄟˋ ㄕˊ ㄊㄧˊ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','答對十題就過關']]};
+const HELP_PARENT = {
+  map:'主畫面是小鎮地圖：滑鼠移到農場、海邊、森林或便利商店會顯示簡介，點一下就進入關卡。鍵盤可用方向鍵選區域、按 Enter 進入；手機或平板直接點區域進入。',
+  walk:'用方向鍵（或 WASD、手機下方的方向鍵）走路，碰到頭上有「!」的角色就會出一題注音題，按數字 1–5 或直接點選項作答。答錯的選項會變灰，可以再選；答對就拿到一樣物資，四樣都拿到就過關。星星依答錯次數給：沒錯 3 顆、錯 1–2 次 2 顆、更多 1 顆。',
+  shop:'小孩當便利商店店員。客人用注音問商品在哪裡，直接在畫面上點商品，或用方向鍵移動框框、按 Enter 選。點錯會用注音告訴小孩點到的是什麼，可以再找。答對 10 題過關，星星依答錯次數給。'};
+const HELP_COMMON = '上方按鈕：「國字」關掉可只看注音（故意寫錯音的辨音題選項本來就只有注音）；「👂 聽」開啟後，題目旁才會出現「🔊聽」按鈕，可用瀏覽器朗讀；「音效」開關遊戲音效；「選關」回到小鎮地圖。星星進度只存在這台裝置的瀏覽器裡。';
+function openHelp(){
+  const k = state.mode === 'title' ? 'map' : L.type === 'shop' ? 'shop' : 'walk';
+  const name = k === 'map' ? Z('ㄒㄧㄠˇ ㄓㄣˋ') : Z(L.name);
+  helpOpen = true; held = []; setPad();
+  const body = $('helpBody');
+  body.innerHTML = `<div class="help-title">📖 ${Z('ㄧㄡˊ ㄒㄧˋ ㄕㄨㄛ ㄇㄧㄥˊ', '遊戲說明')}<span class="eyebrow">· ${name}</span></div>
+    <ul class="help-list">${HELP_KID[k].map(([ico, z, h]) => `<li><span class="ico">${ico}</span><span>${Z(z, h)}</span></li>`).join('')}</ul>
+    <div class="parent"><h3>給家長</h3><p>${HELP_PARENT[k]}</p><p>${HELP_COMMON}</p></div>
+    <div class="row"><button class="btn" data-close-help>${Z('ㄨㄛˇ ㄓ ㄉㄠˋ ˙ㄌㄜ', '我知道了')}</button></div>`;
+  $('helpModal').hidden = false; SFX.blip();
+  const c = body.querySelector('[data-close-help]'); c.onclick = closeHelp;
+  setTimeout(() => c.focus({ preventScroll:true }), 30);
+}
+function closeHelp(){ helpOpen = false; $('helpModal').hidden = true; $('lvname').focus({ preventScroll:true }); }
+$('lvname').onclick = openHelp;
+$('helpModal').addEventListener('click', e => { if (e.target.id === 'helpModal') closeHelp(); });
+
+// 朗讀開關
+let ttsOn = false;
+try { ttsOn = localStorage.getItem('bpm-tts') === '1'; } catch (e) {}
+function applyTts(){ document.body.classList.toggle('tts-on', ttsOn); $('btnTts').setAttribute('aria-pressed', String(ttsOn)); }
+applyTts();
+if (!canSpeak) $('btnTts').hidden = true;
+$('btnTts').onclick = () => {
+  ttsOn = !ttsOn; applyTts(); SFX.blip();
+  if (!ttsOn && canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
+  try { localStorage.setItem('bpm-tts', ttsOn ? '1' : '0'); } catch (e) {}
+};
 $('btnSnd').onclick = () => {
   muted = !muted; const b = $('btnSnd');
   b.setAttribute('aria-pressed', String(!muted)); b.textContent = muted ? '🔇 音效' : '🔊 音效';
