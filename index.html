@@ -210,6 +210,34 @@ body:not(.tts-on) .spk{display:none!important}
 .tip.tc{left:50%;top:calc(3% + 54px);translate:-50% 0}
 .prog{display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:20px}
 .sw{display:inline-block;width:14px;height:14px;border:2px solid var(--ink)}
+/* 森林計時器：最後 10 秒變紅閃 */
+.slot.timer b{font-family:var(--f-px);font-size:16px}
+.slot.timer.hurry{background:#c83030;border-color:#fff;animation:pop .5s steps(2) infinite}
+/* 森林結束畫面 */
+.fed-row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:26px}
+.fed-row span{filter:grayscale(1) opacity(.35)}
+.fed-row span.fed{filter:none}
+.ov.center.party-bg{background:linear-gradient(135deg,rgba(255,92,92,.55),rgba(252,208,0,.55),rgba(60,176,72,.55),rgba(44,100,240,.55),rgba(176,88,240,.55))}
+.panel.party{background:linear-gradient(160deg,#fff7c2,#ffe0f0 50%,#d8f0ff)}
+/* 「太厲害了！」：跟標題一樣的像素外框字（黃字、黑色像素外框、粉紅色陰影），注音不加外框 */
+.panel.party .headline{font-size:clamp(34px,6vw,56px);color:#ffd23c;font-weight:900;letter-spacing:.04em;padding:6px 0;
+  text-shadow:4px 0 0 var(--ink),-4px 0 0 var(--ink),0 4px 0 var(--ink),0 -4px 0 var(--ink),4px 4px 0 var(--ink),-4px 4px 0 var(--ink),4px -4px 0 var(--ink),-4px -4px 0 var(--ink),8px 8px 0 #ff5a8c}
+.panel.party .headline .sy{text-shadow:none;color:var(--ink)}
+.party-stars{font-size:64px}
+.panel.party .big{animation:none}   /* 成功畫面的獎盃、星星都不跳動 */
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.confetti i{position:absolute;top:-12px;width:10px;height:10px;animation-name:fall;animation-timing-function:linear;animation-iteration-count:infinite}
+.confetti i:nth-child(3n){width:6px;height:14px}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(110vh) rotate(540deg)}}
+.ov.center .panel{position:relative;z-index:2}
+/* 森林：遊戲畫面下方的訊息列（動物說的話都顯示在這裡） */
+.feedbar{--say-fs:clamp(20px,2.8vw,26px);display:flex;align-items:center;gap:12px;background:var(--paper);border:4px solid var(--ink);padding:6px 12px;height:calc(var(--say-fs) * 2.2 + 20px)}
+.feedbar .say{font-size:var(--say-fs);font-weight:700;flex:1;min-width:0;overflow:hidden}
+.feedbar .dots{font-size:30px;color:var(--muted);letter-spacing:8px}
+.feedbar .fb-pic{font-size:30px}
+.feedbar.ok{background:#dff8d0}
+.feedbar.no{background:#ffe2dc}
+@media (max-width:640px){ .feedbar{--say-fs:16px;gap:8px;padding:4px 8px} .feedbar .portrait{width:40px;height:40px} }
 .tip-head{display:flex;align-items:center;gap:8px}
 .tip-head .st{margin-left:auto;color:var(--gold);font-size:16px;-webkit-text-stroke:1px var(--ink)}
 .tip-head .st .off{color:#e2dfcf}
@@ -268,6 +296,13 @@ kbd{font-family:var(--f-px);font-size:9px;background:#fff;border:2px solid var(-
     <div class="bubble" id="custBubble" hidden aria-live="polite"></div>
     <div class="town" id="town" hidden></div>
     <div class="ov" id="ov" hidden></div>
+  </div>
+
+  <div class="feedbar" id="feedbar" hidden aria-live="polite">
+    <canvas class="portrait" id="fbPortrait" width="18" height="18"></canvas>
+    <span class="fb-pic" id="fbPic"></span>
+    <div class="say" id="fbSay"></div>
+    <button class="spk" id="fbSpk">🔊 <span data-zy="ㄊㄧㄥ"></span></button>
   </div>
 
 
@@ -399,26 +434,28 @@ const LEVELS = [
 {
   // 森林關：點動物，牠用注音說想吃什麼；帶牠去找散在地圖上的食物
   type:'feed', name:'ㄙㄣ ㄌㄧㄣˊ', han:'森林', emoji:'🌲', theme:'forest',
-  // 動物和食物的位置、每隻想吃什麼，每次進來都隨機重排（見 setupFeed）
+  // 80 秒內能幫幾隻動物找到食物；動物、食物的位置和每隻想吃什麼，每次都隨機重排（見 setupFeed）
+  time:80, goal:6, count:10,   // 每次從 12 種動物裡挑 10 隻出場
+    // 80 秒內幫 6 隻動物找到食物就成功（森林裡有 12 隻可以選）
   map:[
     '################',
-    '#P....#........#',
-    '#...#.#.###....#',
-    '#...#...#......#',
-    '#...###.#.##.###',
-    '~~B~~~~~~~~~B~~~',
-    '#.........#....#',
-    '#.##.###..#....#',
-    '#..#...#..#....#',
-    '#..#...#..##...#',
-    '#....#.........#',
+    '#P.....#.......#',
+    '#..#.......#...#',
+    '#......#.......#',
+    '#....#....#..#.#',
+    '~~B~~~~B~~~~B~~~',
+    '#..............#',
+    '#.#...#...#..#.#',
+    '#.....#........#',
+    '#..#......#....#',
+    '#......#.......#',
     '################'],
   giver:{name:'ㄅㄚˋ ˙ㄅㄚ', han:'爸爸', sprite:'dad'},
   intro:[
     ['ㄙㄣ ㄌㄧㄣˊ ㄌㄧˇ ˙ㄉㄜ ㄉㄨㄥˋ ㄨˋ ㄜˋ ˙ㄌㄜ。','森林裡的動物餓了。'],
-    ['ㄑㄧㄥˇ ㄅㄤ ㄊㄚ ˙ㄇㄣ ㄓㄠˇ ㄒㄧˇ ㄏㄨㄢ ㄔ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ！','請幫他們找喜歡吃的東西！']],
+    ['80 ㄇㄧㄠˇ ㄋㄟˋ，ㄅㄤ 6 ㄓ ㄉㄨㄥˋ ㄨˋ！','80秒內，幫6隻動物！']],
   win:['ㄉㄨㄥˋ ㄨˋ ˙ㄇㄣ ㄉㄡ ㄔ ㄅㄠˇ ˙ㄌㄜ！','動物們都吃飽了！','🐾'],
-  // 食物庫：每次放 8 種在地圖上（5 種動物要的 + 3 種干擾）
+  // 食物庫：每次放 16 種在地圖上（12 種動物要的 + 4 種干擾）
   foods:{
     carrot:  {e:'🥕', z:'ㄏㄨˊ ㄌㄨㄛˊ ˙ㄅㄛ', h:'胡蘿蔔'},
     veg:     {e:'🥬', z:'ㄑㄧㄥ ㄘㄞˋ', h:'青菜'},
@@ -430,13 +467,26 @@ const LEVELS = [
     peanut:  {e:'🥜', z:'ㄏㄨㄚ ㄕㄥ', h:'花生'},
     corn:    {e:'🌽', z:'ㄩˋ ㄇㄧˇ', h:'玉米'},
     banana:  {e:'🍌', z:'ㄒㄧㄤ ㄐㄧㄠ', h:'香蕉'},
-    bug:     {e:'🐛', z:'ㄔㄨㄥˊ ˙ㄗ', h:'蟲子'}},
+    bug:     {e:'🐛', z:'ㄔㄨㄥˊ ˙ㄗ', h:'蟲子'},
+    milk:    {e:'🥛', z:'ㄋㄧㄡˊ ㄋㄞˇ', h:'牛奶'},
+    grass:   {e:'🌿', z:'ㄘㄠˇ', h:'草'},
+    bread:   {e:'🍞', z:'ㄇㄧㄢˋ ㄅㄠ', h:'麵包'},
+    cheese:  {e:'🧀', z:'ㄑㄧˇ ㄙ', h:'起司'},
+    bamboo:  {e:'🎋', z:'ㄓㄨˊ ˙ㄗ', h:'竹子'},
+    melon:   {e:'🍉', z:'ㄒㄧ ㄍㄨㄚ', h:'西瓜'}},
   npcs:[
     {key:'a', name:'ㄒㄧㄠˇ ㄊㄨˋ ˙ㄗ', han:'小兔子', sprite:'bunny',    e:'🐰', likes:['carrot','veg','berry']},
     {key:'b', name:'ㄉㄚˋ ㄒㄩㄥˊ',     han:'大熊',   sprite:'bear',     e:'🐻', likes:['honey','fish','apple']},
     {key:'c', name:'ㄙㄨㄥ ㄕㄨˇ',      han:'松鼠',   sprite:'squirrel', e:'🐿️', likes:['chestnut','peanut','corn']},
     {key:'d', name:'ㄨ ㄍㄨㄟ',         han:'烏龜',   sprite:'turtle',   e:'🐢', likes:['veg','berry','banana']},
-    {key:'e', name:'ㄇㄠ ㄊㄡˊ ㄧㄥ',   han:'貓頭鷹', sprite:'owl',      e:'🦉', likes:['bug','fish']}]
+    {key:'e', name:'ㄇㄠ ㄊㄡˊ ㄧㄥ',   han:'貓頭鷹', sprite:'owl',      e:'🦉', likes:['bug','fish']},
+    {key:'f', name:'ㄇㄨˇ ㄐㄧ',         han:'母雞',   sprite:'hen',      e:'🐔', likes:['corn','bug']},
+    {key:'g', name:'ㄒㄧㄠˇ ㄇㄠ',       han:'小貓',   sprite:'cat',      e:'🐱', likes:['fish','milk']},
+    {key:'h', name:'ㄖㄨˇ ㄋㄧㄡˊ',      han:'乳牛',   sprite:'cow',      e:'🐮', likes:['grass','corn']},
+    {key:'i', name:'ㄒㄧㄠˇ ㄋㄧㄠˇ',    han:'小鳥',   sprite:'bird',     e:'🐦', likes:['bug','bread']},
+    {key:'j', name:'ㄌㄠˇ ㄕㄨˇ',        han:'老鼠',   sprite:'mouse',    e:'🐭', likes:['cheese','peanut']},
+    {key:'k', name:'ㄒㄩㄥˊ ㄇㄠ',       han:'熊貓',   sprite:'panda',    e:'🐼', likes:['bamboo']},
+    {key:'l', name:'ㄒㄧㄠˇ ㄓㄨ',       han:'小豬',   sprite:'pig',      e:'🐷', likes:['melon','apple','corn']}]
 },
 {
   // 超商關：玩家是店員，客人問商品在哪裡，在畫面上點出來
@@ -517,6 +567,9 @@ function rowsFor(def, frame, back){
     if (def.v === 'crab'){ r[0]='1.2f10.2f1.'; r[1]='2f1.1f8.1f1.2f'; r[2]='1.3f8.3f1.'; }
     if (def.v === 'horn'){ r[0]='2.1y10.1y2.'; }
     if (def.v === 'none'){ r[1]='16.'; r[2]='16.'; }
+    if (def.v === 'panda'){ // 熊貓：黑耳朵、黑眼圈、黑鼻子、黑手臂
+      r[1]='2.2x8.2x2.'; r[2]='1.4x6.4x1.'; r[5]=r[6]='1.2f1x1k6f1k1x2f1.'; r[7]='1.3f3l2x3l3f1.'; r[10]='2.2x8f2x2.'; r[11]='1.2x2f6l2f2x1.';
+    }
     if (frame){ r[14]='3.3f4.3f3.'; r[15]='3.3d4.3d3.'; }
   } else if (def.t === 'crab'){
     // 螃蟹：兩支高舉的大鉗子、立起來的眼睛、扁扁的身體、兩側的腳
@@ -580,6 +633,11 @@ const DEFS = {
   clerk:   {t:'person', v:'cap',   pal:{...SK, c:'#2c9c4c', h:'#4a2a10', o:'#2c9c4c', b:'#2c3c5c'}},
   auntie:  {t:'person', v:'bun',   pal:{...SK, h:'#8c8c9c', o:'#8c4cc8', b:'#5c3c8c'}},
   student: {t:'person', v:'hair',  pal:{...SK, h:'#2c1c10', o:'#ffffff', b:'#2c4c9c'}},
+  cat:     {t:'critter',v:'ears',  pal:{f:'#f0b030', i:'#ffd08a', l:'#ffe0b0', k:INK, d:'#a87018'}},
+  mouse:   {t:'critter',v:'ears',  pal:{f:'#a8a8b8', i:'#ffb0c0', l:'#e8e8f0', k:INK, d:'#7c7c8c'}},
+  panda:   {t:'critter',v:'panda', pal:{f:'#f8f8f8', x:'#2c2c38', k:'#ffffff', l:'#ffffff', d:'#2c2c38', i:'#2c2c38'}},
+  pig:     {t:'critter',v:'ears',  pal:{f:'#ffb0c0', i:'#ff8ca8', l:'#ff8ca8', k:INK, d:'#e07890', x:'#ffb0c0'}},
+  bird:    {t:'bird',   v:'plain', pal:{f:'#5cb4fc', y:'#fcb030', k:INK, w:'#2c78e0'}},
   police:  {t:'person', v:'cap',   pal:{...SK, c:'#1c2c6c', h:'#2c1c10', o:'#2c4ca0', b:'#1c2c4c'}},
 };
 const SPR = {};
@@ -736,11 +794,23 @@ function renderBg(level){
 // 把 emoji 畫到 16px 小畫布、去掉半透明邊再描黑邊，變成像素風商品
 let EMO = null;
 function emojiSprite(e){
+  // 先在大畫布上畫，找出圖案真正的邊界，再縮小置中放進 16×16
+  // （手機、電腦的 emoji 字型大小和位置不一樣，直接畫小圖會被切掉，例如 iPhone 的雨傘）
+  const big = document.createElement('canvas'); big.width = big.height = 72;
+  const bg = big.getContext('2d');
+  bg.font = '44px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+  bg.textAlign = 'center'; bg.textBaseline = 'middle';
+  bg.fillText(e, 36, 38);
+  const bd = bg.getImageData(0, 0, 72, 72).data;
+  let x0 = 72, y0 = 72, x1 = -1, y1 = -1;
+  for (let y = 0; y < 72; y++) for (let x = 0; x < 72; x++) if (bd[(y * 72 + x) * 4 + 3] > 40){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   const c = document.createElement('canvas'); c.width = c.height = 18;
   const g = c.getContext('2d');
-  g.font = '14px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText(e, 9, 10);
+  if (x1 >= 0){
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, sc = Math.min(16 / w, 16 / h);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(big, x0, y0, w, h, 1 + (16 - w * sc) / 2, 1 + (16 - h * sc) / 2, w * sc, h * sc);
+  }
   const id = g.getImageData(0, 0, 18, 18), d = id.data;
   for (let i = 3; i < d.length; i += 4) d[i] = d[i] < 110 ? 0 : 255;
   g.putImageData(id, 0, 0);
@@ -1587,6 +1657,7 @@ const starsHtml = n => [0,1,2].map(i => `<span class="${i < n ? '' : 'off'}">★
 function loadLevel(i, got){
   state.lv = i; L = LEVELS[i]; state.mistakes = 0;
   state.got = new Set(got || []);
+  document.getElementById('feedbar').hidden = L.type !== 'feed';
   $('town').hidden = true;
   const store = L.type === 'shop' || L.type === 'fish' || L.type === 'police';
   sbar().hidden = !store;
@@ -1612,7 +1683,7 @@ function loadLevel(i, got){
       grid[y][x] = '.';
     }
   }
-  if (L.type === 'feed') setupFeed();
+  if (L.type === 'feed'){ setupFeed(); feedLeft = (L.time || 60) * 1000; feedRunning = false; feedIdle(); }
   bg = renderBg(L);
   renderHud();
 }
@@ -1627,8 +1698,9 @@ function renderHud(popIdx){
     return;
   }
   if (L.type === 'feed'){
-    $('slots').innerHTML = L.npcs.map((n, i) =>
-      `<div class="slot ${state.got.has(i) ? 'got' : ''} ${popIdx === i ? 'pop' : ''}"><span class="ic">${n.e}</span><span class="nm">${Z(n.name)}</span></div>`).join('');
+    $('slots').innerHTML = `<div class="slot got timer"><span class="ic">⏱️</span><span class="nm"><b id="feedTimer">${Math.ceil(feedLeft / 1000)}</b> ${Z('ㄇㄧㄠˇ', '秒')}</span></div>
+      <div class="slot got ${popIdx !== undefined ? 'pop' : ''}"><span class="ic">🐾</span><span class="nm">${Z('ㄅㄤ ˙ㄌㄜ', '幫了')} <b>${state.got.size}</b> / ${L.goal}</span></div>`;
+    updateFeedTimer();
     return;
   }
   $('slots').innerHTML = L.npcs.map((n, i) =>
@@ -1765,6 +1837,7 @@ function zoneIcon(lv){
 }
 function showTitle(){
   hideBubble();
+  document.getElementById('feedbar').hidden = true;
   if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
   hideOv();
   state.mode = 'title';
@@ -1798,7 +1871,7 @@ function selectZone(i, quiet){
     : lv.type === 'fish'
     ? '<span class="tip-em">🐟</span><span class="tip-em">🦀</span><span class="tip-em">🦐</span><span class="tip-em">🐙</span><span class="tip-em">🐢</span>'
     : lv.type === 'feed'
-    ? lv.npcs.map(n => `<span class="tip-em">${n.e}</span>`).join('')
+    ? '<span class="tip-em">⏱️</span>' + lv.npcs.slice(0, 6).map(n => `<span class="tip-em">${n.e}</span>`).join('') + '…'
     : lv.type === 'shop'
     ? `<span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${lv.need} ${Z('ㄊㄧˊ')}</span>`
     : lv.npcs.map(n => `<span class="tip-em" title="${esc(n.item.h)}">${n.item.e}</span>`).join('');
@@ -1851,7 +1924,7 @@ function startLevel(i){
       : L.type === 'fish'
       ? `<div class="items"><span class="it"><span>🎣</span>${Z('ㄇㄞˋ ㄍㄟˇ', '賣給')} ${L.need} ${Z('ㄨㄟˋ ㄎㄜˋ ㄖㄣˊ', '位客人')}</span><span class="it"><span>🐟</span>🦀🦐🐙🐢</span></div>`
       : L.type === 'feed'
-      ? `<div class="items">${L.npcs.map(n => `<span class="it"><span>${n.e}</span>${Z(n.name)}</span>`).join('')}</div>`
+      ? `<div class="items"><span class="it"><span>⏱️</span>${L.time} ${Z('ㄇㄧㄠˇ', '秒')}</span><span class="it"><span>🐾</span>${L.goal} ${Z('ㄓ ㄉㄨㄥˋ ㄨˋ', '隻動物')}</span></div>`
       : L.type === 'shop'
       ? `<div class="items"><span class="it"><span>🛍️</span>${Z('ㄉㄚˊ ㄉㄨㄟˋ')} ${L.need} ${Z('ㄊㄧˊ')}</span><span class="it"><span>👆</span>${Z('ㄉㄧㄢˇ ㄕㄤ ㄆㄧㄣˇ')}</span></div>`
       : `<div class="eyebrow">${Z('ㄧㄠˋ ㄓㄠˇ ˙ㄉㄜ ㄉㄨㄥ ˙ㄒㄧ')}</div>
@@ -1864,6 +1937,7 @@ function startLevel(i){
   ov.onclick = e => { if (e.target === ov && state.mode === 'intro') showTitle(); };
   ov.querySelector('[data-primary]').onclick = () => {
     SFX.blip(); hideOv(); state.mode = 'play';
+    if (L.type === 'feed'){ feedRunning = true; feedLast = performance.now(); feedUsed = 0; }
     if (L.type === 'shop' || L.type === 'fish' || L.type === 'police') setTimeout(() => { if (shop.phase === 'off' && state.mode === 'play') nextCustomer(); }, 400);
   };
 }
@@ -1984,6 +2058,7 @@ function update(){
   if (bumpCool > 0) bumpCool--;
   if (helpOpen) return;
   if (state.mode !== 'play') return;
+  if (L.type === 'feed' && feedRunning && feedTick()) return;
   if (L.type === 'shop' || L.type === 'fish' || L.type === 'police'){ updateShop(); if (L.type === 'fish') updateSea(); if (L.type === 'police') updatePolice(); return; }
   const p = player;
   if (p.moving){
@@ -2024,25 +2099,40 @@ function feedDialog(npc, lines, pic){
   drawPortrait(npc.sprite); bindSpeak(lines.map(l => l[1]).join(''));
   return ov.querySelector('[data-primary]');
 }
-// 動物請你幫忙的五種說法，每次進森林隨機分給五隻動物（一隻一種）
+// 動物請你幫忙的五種說法（限時關卡，所以都很短），每次進森林隨機分給動物
 const FEED_TPL = [
-  [z => `ㄨㄛˇ ㄉㄨˋ ˙ㄗ ㄜˋ ˙ㄌㄜ，ㄑㄧㄥˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ㄓㄠˇ ${z}！`, h => `我肚子餓了，請帶我去找${h}！`],
-  [z => `ㄏㄠˇ ㄒㄧㄤˇ ㄔ ${z} ˙ㄛ！ㄋㄧˇ ㄎㄜˇ ㄧˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ˙ㄇㄚ？`, h => `好想吃${h}喔！你可以帶我去嗎？`],
-  [z => `${z} ㄎㄢˋ ㄑㄧˇ ㄌㄞˊ ㄏㄠˇ ㄏㄠˇ ㄔ！ㄑㄧㄥˇ ㄉㄞˋ ㄨㄛˇ ㄑㄩˋ ㄓㄠˇ。`, h => `${h}看起來好好吃！請帶我去找。`],
-  [z => `ㄨㄛˇ ㄗㄨㄟˋ ㄞˋ ㄔ ${z} ˙ㄌㄜ，ㄋㄧˇ ㄓ ㄉㄠˋ ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ ˙ㄇㄚ？`, h => `我最愛吃${h}了，你知道在哪裡嗎？`],
-  [z => `ㄍㄨ ㄌㄨ ㄍㄨ ㄌㄨ～ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${z}！`, h => `咕嚕咕嚕～我想吃${h}！`]];
+  [z => `ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${z}！`, h => `我想吃${h}！`],
+  [z => `ㄏㄠˇ ㄒㄧㄤˇ ㄔ ${z}！`, h => `好想吃${h}！`],
+  [z => `ㄑㄧㄥˇ ㄉㄞˋ ㄨㄛˇ ㄓㄠˇ ${z}！`, h => `請帶我找${h}！`],
+  [z => `ㄨㄛˇ ㄞˋ ㄔ ${z}！`, h => `我愛吃${h}！`],
+  [z => `ㄍㄨ ㄌㄨ～ㄨㄛˇ ㄧㄠˋ ${z}！`, h => `咕嚕～我要${h}！`]];
+// 森林的對話都顯示在遊戲畫面下方的訊息列，不跳視窗、不暫停計時
+let feedSpeech = '', feedBarTimer = 0;
+function feedSay(npc, z, h, kind, pic){
+  clearTimeout(feedBarTimer);
+  const bar = document.getElementById('feedbar'), c = document.getElementById('fbPortrait');
+  bar.className = 'feedbar ' + (kind || ''); bar.hidden = false;
+  c.style.visibility = npc ? '' : 'hidden';
+  if (npc){ const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 18, 18); g.drawImage(SPR[npc.sprite].front[0], 0, 0); }
+  document.getElementById('fbPic').textContent = pic || '';
+  document.getElementById('fbSay').innerHTML = z ? Z(z, h) : '<span class="dots">⋯</span>';
+  feedSpeech = h || '';
+}
+// 平常的狀態：有帶著動物就顯示牠想吃什麼（只有文字，沒有食物的圖），沒有就顯示「⋯」
+function feedIdle(){
+  if (L.type !== 'feed') return;
+  if (follower){ const fd = L.foods[follower.wants], tp = FEED_TPL[follower.tpl || 0]; feedSay(follower, tp[0](fd.z), tp[1](fd.h)); }
+  else feedSay(null, '', '');
+}
 function feedTalk(npc){
-  const fd = L.foods[npc.wants];
-  if (npc.done){ feedDialog(npc, [['ㄏㄠˇ ㄏㄠˇ ㄔ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '好好吃！謝謝你！']]).onclick = closeTalk; return; }
-  if (follower === npc){ feedDialog(npc, [[`ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${fd.z}。`, `我想吃${fd.h}。`]]).onclick = closeTalk; return; }
-  if (follower){ feedDialog(npc, [['ㄋㄧˇ ㄒㄧㄢ ㄅㄤ ㄅㄤ ㄊㄚ ˙ㄅㄚ！', '你先幫幫他吧！']]).onclick = closeTalk; return; }
-  // 只說注音和國字，不給食物的圖，小孩要讀懂才知道找什麼
-  const tp = FEED_TPL[npc.tpl || 0];
-  feedDialog(npc, [[`ㄨㄛˇ ㄕˋ ${npc.name}。`, `我是${npc.han}。`], [tp[0](fd.z), tp[1](fd.h)]]).onclick = () => {
-    follower = npc; npc.following = true;
-    npc.px = npc.x * T; npc.py = npc.y * T; npc.tx = npc.x; npc.ty = npc.y;
-    SFX.blip(); closeTalk();
-  };
+  state.mode = 'play';
+  if (npc.done){ feedSay(npc, 'ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '謝謝你！', 'ok'); feedBarTimer = setTimeout(feedIdle, 1500); return; }
+  if (follower === npc){ feedIdle(); return; }
+  if (follower){ feedSay(npc, 'ㄋㄧˇ ㄒㄧㄢ ㄅㄤ ㄅㄤ ㄊㄚ ˙ㄅㄚ！', '你先幫幫他吧！', 'no'); feedBarTimer = setTimeout(feedIdle, 1500); return; }
+  // 點到的動物直接跟上來，下方顯示牠想吃什麼
+  follower = npc; npc.following = true;
+  npc.px = npc.x * T; npc.py = npc.y * T; npc.tx = npc.x; npc.ty = npc.y;
+  SFX.talk(); feedIdle();
 }
 // 每次進森林：每隻動物從愛吃的清單挑一種（不重複），再加 3 種干擾食物；
 // 動物和食物隨機放在空地上，確認全部走得到、動物不擋路，而且動物離自己要的食物遠一點
@@ -2063,29 +2153,84 @@ function setupFeed(){
     }
     return seen;
   };
-  for (let tries = 0; tries < 400; tries++){
+  for (let tries = 0; tries < 800; tries++){
+    // 選擇少的動物先挑（例如熊貓只吃竹子），比較不會挑到沒得選
+    const pool = shuffle(L.npcs.slice()).slice(0, L.count || L.npcs.length);   // 這次出場的動物
     const used = new Set(), wants = [];
-    for (const n of L.npcs){
-      const opts = shuffle(n.likes.filter(k => !used.has(k)));
+    const order = shuffle(pool.map((_, i) => i)).sort((p, q) => pool[p].likes.length - pool[q].likes.length);
+    for (const i of order){
+      const opts = shuffle(pool[i].likes.filter(k => !used.has(k)));
       if (!opts.length) break;
-      wants.push(opts[0]); used.add(opts[0]);
+      wants[i] = opts[0]; used.add(opts[0]);
     }
-    if (wants.length < L.npcs.length) continue;
-    const extra = shuffle(Object.keys(L.foods).filter(k => !used.has(k))).slice(0, 3);
-    const spots = shuffle(free.slice()), aSpots = spots.slice(0, L.npcs.length);
-    // 動物彼此至少隔 3 格，頭上的「!」才不會疊在一起
-    if (aSpots.some((p, i) => aSpots.some((q, j) => j > i && Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) < 3))) continue;
-    const keys = shuffle([...wants, ...extra]), fSpots = spots.slice(L.npcs.length, L.npcs.length + keys.length);
+    if (used.size < pool.length) continue;
+    const extra = shuffle(Object.keys(L.foods).filter(k => !used.has(k))).slice(0, 4);
+    // 一步一步放：先放動物（彼此至少隔 2 格，頭上的「!」不會疊在一起），
+    // 再從「不在任何動物旁邊」的空地挑食物（不然正上方那格會被「!」擋住）
+    const dist = (p, q) => Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]);
+    const spots = shuffle(free.slice()), aSpots = [];
+    for (const p of spots){ if (aSpots.length < pool.length && aSpots.every(q => dist(p, q) >= 2)) aSpots.push(p); }
+    if (aSpots.length < pool.length) continue;
+    const keys = shuffle([...wants, ...extra]);
+    const fSpots = spots.filter(p => aSpots.every(q => dist(p, q) >= 2)).slice(0, keys.length);
+    if (fSpots.length < keys.length) continue;
     const seen = reachable(aSpots);
     if (!fSpots.every(p => seen.has(p.join()))) continue;
     if (!aSpots.every(([x, y]) => Object.values(DIRS).some(([dx, dy]) => seen.has((x + dx) + ',' + (y + dy))))) continue;
-    const far = wants.every((w, i) => { const fp = fSpots[keys.indexOf(w)], ap = aSpots[i]; return Math.abs(fp[0] - ap[0]) + Math.abs(fp[1] - ap[1]) >= 6; });
-    if (!far && tries < 300) continue;
+    const far = wants.every((w, i) => { const fp = fSpots[keys.indexOf(w)], ap = aSpots[i]; return Math.abs(fp[0] - ap[0]) + Math.abs(fp[1] - ap[1]) >= 4; });
+    if (!far && tries < 600) continue;
     const tpls = shuffle(FEED_TPL.map((_, i) => i));
-    npcs = L.npcs.map((n, i) => ({ ...n, idx:i, x:aSpots[i][0], y:aSpots[i][1], done: state.got.has(i), wants: wants[i], tpl: tpls[i % tpls.length] }));
+    npcs = pool.map((n, i) => ({ ...n, idx:i, x:aSpots[i][0], y:aSpots[i][1], done: state.got.has(i), wants: wants[i], tpl: tpls[i % tpls.length] }));
     foods = keys.map((k, i) => ({ id:k, x:fSpots[i][0], y:fSpots[i][1], ...L.foods[k], eaten:false }));
     return;
   }
+}
+
+// 森林倒數（秒數見關卡資料 time）：只有在地圖上走動時才算時間（動物說話時暫停，讓小孩慢慢讀）；帶錯食物扣 5 秒
+let feedLeft = 60000, feedLast = 0, feedRunning = false, feedUsed = 0;
+function updateFeedTimer(){
+  const el = document.getElementById('feedTimer'); if (!el) return;
+  el.textContent = Math.max(0, Math.ceil(feedLeft / 1000));
+  el.closest('.slot').classList.toggle('hurry', feedLeft <= 10000);
+}
+function feedTick(){
+  const now = performance.now(), dt = Math.min(100, now - feedLast); feedLast = now;
+  feedLeft -= dt; feedUsed += dt; updateFeedTimer();
+  if (feedLeft <= 0){ feedLeft = 0; feedRunning = false; updateFeedTimer(); feedEnd(false); return true; }
+  return false;
+}
+function fanfare(){
+  [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((fq, i) => { beep(fq, i === 7 ? .7 : .14, 'square', .05, i * .13); beep(fq / 2, i === 7 ? .7 : .14, 'triangle', .05, i * .13); });
+}
+function feedEnd(all){
+  walkPath = null; held = [];
+  const n = npcs.filter(a => a.done).length, sec = Math.max(0, Math.ceil(feedLeft / 1000));
+  const stars = all ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0;
+  const used = Math.max(1, Math.round(feedUsed / 1000));
+  best[state.lv] = Math.max(best[state.lv] || 0, stars); save();
+  state.mode = 'clear';
+  if (all) fanfare(); else SFX.clear();
+  const head = all ? Z('ㄊㄞˋ ㄌㄧˋ ㄏㄞˋ ˙ㄌㄜ！', '太厲害了！') : Z('ㄕˊ ㄐㄧㄢ ㄉㄠˋ！', '時間到！');
+  const line = all
+    ? Z(`ㄋㄧˇ ㄓˇ ㄩㄥˋ ˙ㄌㄜ ${used} ㄇㄧㄠˇ ㄐㄧㄡˋ ㄔㄥˊ ㄍㄨㄥ ˙ㄌㄜ！`, `你只用了${used}秒就成功了！`)
+    : Z(`ㄋㄧˇ ㄅㄤ ˙ㄌㄜ ${n} ㄓ ㄉㄨㄥˋ ㄨˋ ㄔ ㄉㄠˋ ㄉㄨㄥ ˙ㄒㄧ！`, `你幫了${n}隻動物吃到東西！`);
+  const cheer = all ? '' : n ? Z('ㄗㄨㄛˋ ˙ㄉㄜ ㄏㄣˇ ㄏㄠˇ！', '做得很好！') : Z('ㄇㄟˊ ㄍㄨㄢ ˙ㄒㄧ，ㄗㄞˋ ㄕˋ ㄧ ㄘˋ！', '沒關係，再試一次！');
+  // 全部吃飽：彩色紙片從上面落下、彩虹背景、跳動的大星星
+  const cols = ['#e83c3c', '#fcd000', '#3cb048', '#2c64f0', '#b058f0', '#ff8c1a', '#ff6ea8'];
+  const confetti = all ? '<div class="confetti" aria-hidden="true">' + Array.from({ length:60 }, (_, i) =>
+    `<i style="left:${(i * 37) % 100}%;background:${cols[i % cols.length]};animation-delay:${(i % 12) * .18}s;animation-duration:${2.2 + (i % 5) * .35}s"></i>`).join('') + '</div>' : '';
+  showOv(`${confetti}<div class="panel center-panel ${all ? 'party' : ''}">
+    <div class="headline">${head}</div>
+    <div class="big">${all ? '🏆' : '⏱️'}</div>
+    <div class="say">${line}</div>${cheer ? `<div class="say">${cheer}</div>` : ''}
+    <div class="fed-row">${npcs.map(a => `<span class="${a.done ? 'fed' : ''}" title="${esc(a.han)}">${a.e}</span>`).join('')}</div>
+    <div class="stars ${all ? 'party-stars' : ''}" aria-label="${stars} 顆星">${starsHtml(stars)}</div>
+    <div class="row"><button class="btn alt" data-again>${Z('ㄗㄞˋ ㄨㄢˊ ㄧ ㄘˋ')}</button>
+      <button class="btn" data-primary data-focus data-next>${Z('ㄒㄧㄚˋ ㄧ ㄍㄨㄢ')} ▶</button></div>
+  </div>`, true);
+  if (all) ov.classList.add('party-bg');
+  ov.querySelector('[data-again]').onclick = () => startLevel(state.lv);
+  ov.querySelector('[data-next]').onclick = () => startLevel(state.lv + 1);
 }
 
 // 主角每走完一格就檢查：腳下有食物、又有動物跟著，就看對不對
@@ -2096,15 +2241,16 @@ function feedArrive(){
   walkPath = null; held = [];
   if (fd.id === npc.wants){
     fd.eaten = true; npc.done = true; npc.following = false; follower = null;
-    npc.x = npc.tx; npc.y = npc.ty;
+    // 吃飽的動物留在剛吃掉的食物那格（已經空了），不會蓋住別的食物
+    npc.x = fd.x; npc.y = fd.y;
     state.got.add(npc.idx); renderHud(npc.idx); SFX.ok(); setTimeout(SFX.item, 300);
-    feedDialog(npc, [['ㄏㄠˇ ㄏㄠˇ ㄔ！ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '好好吃！謝謝你！']], fd.e).onclick = () => {
-      closeTalk();
-      if (npcs.every(n => n.done)){ state.mode = 'busy'; setTimeout(levelClear, 400); }
-    };
+    feedSay(npc, 'ㄒㄧㄝˋ ˙ㄒㄧㄝ ㄋㄧˇ！', '謝謝你！', 'ok', fd.e);
+    if (npcs.filter(n => n.done).length >= L.goal){ feedRunning = false; state.mode = 'busy'; setTimeout(() => feedEnd(true), 600); }
+    else feedBarTimer = setTimeout(feedIdle, 1500);
   } else {
     state.mistakes++; SFX.no();
-    feedDialog(npc, [[`ㄅㄨˋ ㄕˋ ㄓㄜˋ ˙ㄍㄜ ˙ㄛ，ㄨㄛˇ ㄒㄧㄤˇ ㄔ ${want.z}。`, `不是這個喔，我想吃${want.h}。`]]).onclick = closeTalk;
+    feedLeft = Math.max(1000, feedLeft - 5000); updateFeedTimer();   // 帶錯扣 5 秒（至少留 1 秒）
+    feedSay(npc, `ㄅㄨˋ ㄕˋ ㄓㄜˋ ˙ㄍㄜ！ㄨㄛˇ ㄧㄠˋ ${want.z}。ㄎㄡˋ 5 ㄇㄧㄠˇ！`, `不是這個！我要${want.h}。扣5秒！`, 'no');
   }
 }
 
@@ -2132,8 +2278,10 @@ function draw(){
       if (grid[y][x] === ',' && grid[y - 1][x] === '~') P(ctx, x * T + ((x + s) % 2) * 4, y * T, '#ffffff', 8, 1);
     }
   }
+  // 跟著走的動物畫在食物底下，食物永遠露出來
+  if (follower) drawSprite(SPR[follower.sprite].front[Math.floor(frame / 8) % 2], follower.px - 1, follower.py - 2, false);
   foods.forEach(fd => { if (!fd.eaten) drawSprite(foodSpr(fd.e), fd.x * T - 1, fd.y * T - 1 - (Math.floor((frame + fd.x * 9) / 40) % 2), false); });
-  const ents = npcs.map(n => ({ y: n.following ? n.py : n.y * T, f:() => {
+  const ents = npcs.filter(n => !n.following).map(n => ({ y: n.following ? n.py : n.y * T, f:() => {
     const bob = (Math.floor((frame + n.idx * 17) / 32) % 2);
     const nx = n.following ? n.px : n.x * T, ny = n.following ? n.py : n.y * T;
     drawSprite(SPR[n.sprite].front[n.following && (Math.floor(frame / 8) % 2) ? 1 : 0], nx - 1, ny - 2 - bob, false);
@@ -2144,7 +2292,8 @@ function draw(){
       P(ctx, bx, by - j, INK, 9, 10); P(ctx, bx + 1, by + 1 - j, '#ffffff', 7, 8);
       P(ctx, bx + 4, by + 2 - j, '#e03030', 1, 4); P(ctx, bx + 4, by + 7 - j, '#e03030', 1, 1);
     } else {
-      const hx = bx + 1, hy = by + 3;
+      // 森林：吃飽的愛心畫在動物身上右上角，不佔用上面那格（才不會蓋到食物）
+      const hx = L.type === 'feed' ? nx + 10 : bx + 1, hy = L.type === 'feed' ? ny - 3 - bob : by + 3;
       P(ctx, hx + 1, hy, '#ff5a8c', 2, 1); P(ctx, hx + 4, hy, '#ff5a8c', 2, 1);
       P(ctx, hx, hy + 1, '#ff5a8c', 7, 2); P(ctx, hx + 1, hy + 3, '#ff5a8c', 5, 1); P(ctx, hx + 2, hy + 4, '#ff5a8c', 3, 1); P(ctx, hx + 3, hy + 5, '#ff5a8c', 1, 1);
     }
@@ -2237,7 +2386,7 @@ function findPath(sx, sy, goals){
   return null;
 }
 function tapWalk(t){
-  if (L.type === 'feed' && follower && follower.tx === t.x && follower.ty === t.y){ state.mode = 'talk'; feedTalk(follower); return; }
+  if (L.type === 'feed' && follower && follower.tx === t.x && follower.ty === t.y){ feedTalk(follower); return; }
   if (t.x < 0 || t.y < 0 || t.x >= COLS || t.y >= ROWS) return;
   const n = npcAt(t.x, t.y), goals = new Set();
   if (n) Object.values(DIRS).forEach(([dx, dy]) => goals.add((n.x + dx) + ',' + (n.y + dy)));
@@ -2306,6 +2455,7 @@ cv.addEventListener('pointermove', e => {
   if (i >= 0){ shop.cursor = i; shop.showCursor = true; }
 });
 $('sbSpk').onclick = () => speak(shop.speech || '');
+$('fbSpk').onclick = () => speak(feedSpeech);
 if (!canSpeak) $('sbSpk').hidden = true;
 document.querySelectorAll('[data-zy]').forEach(el => { el.innerHTML = Z(el.dataset.zy); });
 
@@ -2354,7 +2504,8 @@ const HELP_KID = {
   feed:[['👆','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄉㄨㄥˋ ㄨˋ','點一下動物'],
         ['📖','ㄎㄢˋ ㄊㄚ ㄒㄧㄤˇ ㄔ ㄕㄣˊ ˙ㄇㄜ','看他想吃什麼'],
         ['🍯','ㄉㄞˋ ㄊㄚ ㄑㄩˋ ㄓㄠˇ ㄕˊ ㄨˋ','帶他去找食物'],
-        ['⭐','ㄅㄤ ㄙㄨㄛˇ ㄧㄡˇ ㄉㄨㄥˋ ㄨˋ ㄔ ㄅㄠˇ ㄐㄧㄡˋ ㄍㄨㄛˋ ㄍㄨㄢ','幫所有動物吃飽就過關']],
+        ['⏱️','80 ㄇㄧㄠˇ ㄋㄟˋ ㄅㄤ 6 ㄓ ㄉㄨㄥˋ ㄨˋ','80秒內幫6隻動物'],
+        ['🎉','ㄗㄨㄛˋ ㄉㄠˋ ㄧㄡˇ ㄉㄚˋ ㄐㄧㄥ ㄒㄧˇ','做到有大驚喜']],
   fish:[['🧑','ㄎㄜˋ ㄖㄣˊ ㄏㄨㄟˋ ㄕㄨㄛ ㄧㄠˋ ㄇㄞˇ ㄕㄣˊ ˙ㄇㄜ。','客人會說要買什麼。'],
         ['🎣','ㄉㄧㄢˇ ㄧ ˙ㄒㄧㄚ ㄐㄧㄡˋ ㄏㄨㄟˋ ㄩㄥˋ ㄨㄤˇ ˙ㄗ ㄓㄨㄚ','點一下就會用網子抓'],
         ['🔁','ㄓㄨㄚ ㄘㄨㄛˋ ˙ㄌㄜ ㄧㄠˋ ㄔㄨㄥˊ ㄓㄨㄚ','抓錯了要重抓'],
@@ -2366,7 +2517,7 @@ const HELP_PARENT = {
   map:'主畫面是小鎮地圖：滑鼠移到農場、海邊、森林、超商或魚店會顯示簡介，點一下就進入關卡。鍵盤可用方向鍵選區域、按 Enter 進入；手機或平板直接點區域進入。',
   walk:'直接點地圖上的位置，主角會自己走過去；點頭上有「!」的角色，主角會走到旁邊並出一題注音題，直接點選項作答。電腦也可以用方向鍵（或 WASD）走路、按數字 1–4 作答。答錯的選項會變灰，可以再選；答對就拿到一樣物資，四樣都拿到就過關。星星依答錯次數給：沒錯 3 顆、錯 1–2 次 2 顆、更多 1 顆。',
   police:'小孩當警察。來求助的人會用注音描述要找的：不見的東西（顏色和種類）、壞人或走失孩子的爸媽（帽子和衣服的顏色）、迷路孩子的家（屋頂和門的顏色）、走失的小貓（顏色）。在街上點出符合的東西、人、小貓或房子，每個描述只對應一個答案。找錯會出現「不對喔，再找找看！」，可以再找。幫助 6 個人過關，星星依找錯次數給。每次玩街上的東西都會重新安排。',
-  feed:'森林裡有 5 隻動物，地上散著 8 種食物（其中 3 種是沒有動物要吃的干擾項）。每次進來，動物想吃的東西和動物、食物的位置都會重新安排。點一下動物，主角會走過去，動物用注音說想吃什麼（只有文字，沒有食物的圖）。按「好」之後動物會跟在主角後面；再點地圖上的食物，主角會帶牠走過去。找對了動物會說「好好吃！謝謝你！」並留在那裡；找錯會說「不是這個喔」，可以再找。一次只能帶一隻。5 隻都吃飽就過關，星星依找錯次數給。',
+  feed:'限時 80 秒，幫 6 隻動物找到食物就成功：森林裡有 10 隻動物（每次從 12 種動物裡隨機挑），地上散著 14 種食物（其中 4 種是干擾）。點一下動物，主角會走過去，動物用注音說想吃什麼（只有文字，沒有食物的圖）。點到的動物會直接跟著主角，畫面下方會顯示牠想吃什麼；再點地圖上的食物帶牠過去。找對了動物說「謝謝你！」；帶錯會扣 5 秒，所以亂試會浪費時間。80 秒內幫到 6 隻會有慶祝畫面，告訴他只用了幾秒（真正花的時間）；時間到則顯示幫了幾隻（4 隻以上 2 顆星、2 隻以上 1 顆）。每次玩動物想吃的和位置都會重新安排。',
   fish:'小孩當魚店老闆。客人用注音說要幾隻什麼（紅、黃、藍、綠、紫色的魚，或螃蟹、蝦子、章魚、烏龜，有時是兩種的組合），點魚缸裡游動的動物，魚網就會撈過去。抓對的放進水桶；抓錯會用注音說這是什麼並放回去重抓；點到沒東西的地方不算錯。賣給 6 位客人過關，星星依抓錯次數給。',
   shop:'小孩當超商店員。客人用注音問商品在哪裡，直接在畫面上點商品（電腦也可以用方向鍵移動框框、按 Enter 選）。點錯會用注音告訴小孩點到的是什麼，可以再找。答對 10 題過關，星星依答錯次數給。'};
 const HELP_COMMON = '上方按鈕：「國字」關掉可只看注音（故意寫錯音的辨音題選項本來就只有注音）；「👂 聽」開啟後，題目旁才會出現「🔊聽」按鈕，可用瀏覽器朗讀；「音效」開關遊戲音效；「選關」回到小鎮地圖。星星進度只存在這台裝置的瀏覽器裡。';
